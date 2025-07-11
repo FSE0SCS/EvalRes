@@ -216,9 +216,9 @@ elif st.session_state.current_step == 2:
 # 3º: Mensaje de confirmación
 elif st.session_state.current_step == 3:
     st.header("Paso 2: Confirmación de Datos")
-    st.markdown(f"**Usted ha seleccionado estos datos:**")
-    st.markdown(f"**AREA :** {st.session_state.area_selected}")
-    st.markdown(f"**DIRECCION/GERENCIA :** {st.session_state.direccion_selected}")
+    # Modificación para colorear el texto
+    st.markdown(f"**AREA :** <span style='color: #28a745;'>{st.session_state.area_selected}</span>", unsafe_allow_html=True) # Verde
+    st.markdown(f"**DIRECCION/GERENCIA :** <span style='color: #007bff;'>{st.session_state.direccion_selected}</span>", unsafe_allow_html=True) # Azul
     st.markdown("**¿Desea confirmar estos datos?**")
 
     col_si, col_atras = st.columns(2)
@@ -351,6 +351,7 @@ elif st.session_state.current_step == 5:
             else:
                 # Calcular medias y preparar DataFrame para Excel
                 results = []
+                n_residentes_data = [] # Data for the new sheet
                 for esp, data in st.session_state.data_input.items():
                     row = {"Especialidad": esp}
                     for r_num in range(1, 6):
@@ -360,17 +361,24 @@ elif st.session_state.current_step == 5:
                         row[f"Media {r_key}"] = f"{avg:.2f}" if avg is not None else "" # Formatear a 2 decimales
 
                     results.append(row)
+                    n_residentes_data.append({"Especialidad": esp, "Nº Residentes Aptos": data['num_residentes']}) # Collect data for new sheet
 
                 output_df = pd.DataFrame(results)
 
                 # Renombrar columnas para el Excel final
                 output_df.columns = ["Especialidad", "Media R1", "Media R2", "Media R3", "Media R4", "Media R5"]
 
+                # Crear DataFrame para la nueva hoja "N_Residentes"
+                n_residentes_df = pd.DataFrame(n_residentes_data)
+
                 # Generar archivo Excel en memoria
                 output = io.BytesIO()
                 excel_sheet_name = CODIGOS_DIRECCION.get(st.session_state.direccion_selected, "Resultados")
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    # Escribir la primera hoja (la original)
                     output_df.to_excel(writer, sheet_name=excel_sheet_name, index=False)
+                    # Escribir la nueva hoja "N_Residentes"
+                    n_residentes_df.to_excel(writer, sheet_name="N_Residentes", index=False)
                 output.seek(0) # Rewind to the beginning of the stream
 
                 st.session_state.excel_output = output
@@ -387,8 +395,7 @@ elif st.session_state.current_step == 5:
 # 6º: Descarga y mensaje de envío por correo
 elif st.session_state.current_step == 6:
     st.header("Paso 4: Descarga del Informe")
-    st.success("¡El informe se ha generado con éxito!")
-    st.write("Ahora puedes descargar el archivo Excel.")
+    st.success("¡El informe se ha generado con éxito! Puedes descargarlo ahora.")
 
     if 'excel_output' in st.session_state and 'excel_filename' in st.session_state:
         st.download_button(
@@ -402,7 +409,10 @@ elif st.session_state.current_step == 6:
         st.error("No se encontró el archivo Excel. Por favor, regresa y genera el informe nuevamente.")
 
     st.markdown("---")
-    st.markdown("A continuación, debe enviar la hoja descargada a **fse.scs** 📧")
+    # Nuevo mensaje más prominente para el envío por correo
+    st.warning("⚠️ **Recordatorio Importante:** Después de descargar el archivo Excel, debes enviarlo a **fse.scs** 📧.")
+    st.info("💡 **Aclaración:** Streamlit no permite ventanas emergentes que bloqueen la aplicación para confirmaciones directas. Este mensaje es la forma más clara de recordarte la acción post-descarga.")
+
 
     if st.button("Volver al Inicio (nueva evaluación)"):
         st.session_state.clear() # Clear all session state to restart
