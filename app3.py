@@ -424,10 +424,6 @@ elif st.session_state.current_step == 5:
             # Aplicar la lógica de pre-relleno si 'Todos' no está marcado y este R no está seleccionado
             if not all_checked and r_key not in st.session_state.selected_rs_for_input:
                 num_res = 0 # Rellenar con 0 si no está seleccionado y no es 'Todos'
-                # Las notas se mantienen como están (None/vacío) para el cálculo de la media
-                # o se podrían rellenar con 0 para coherencia visual, pero es mejor dejar None
-                # para que el cálculo de la media los ignore explícitamente.
-                # Aquí no modificamos las notas, solo el número de evaluados.
             
             table_data_list.append({
                 "Especialidad": esp,
@@ -474,21 +470,34 @@ elif st.session_state.current_step == 5:
             r_key = f'R{r_num}'
             edited_df_r = edited_dfs[r_key]
             
-            # Recuperar el valor de 'Nº R_ Evaluados' de la tabla editada
-            num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Evaluados"]
-            # Si la columna estaba deshabilitada y el valor es 0, asegurarse de que se guarda como 0
-            if not all_checked and r_key not in st.session_state.selected_rs_for_input:
-                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
-            else:
-                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = num_res_val
+            # Determine if the 'Nº Evaluados' column for this R is disabled
+            is_num_res_disabled = not all_checked and r_key not in st.session_state.selected_rs_for_input
 
+            # Handle num_residentes_R
+            if is_num_res_disabled:
+                # If disabled, it should be 0, regardless of what data_editor might return
+                st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
+            else:
+                # If enabled, get the value from the edited DataFrame
+                num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Evaluados"]
+                # Try converting to int, handle potential None/NaN/empty string from user input
+                try:
+                    # Convert to int only if not None/NaN, otherwise keep as None for validation to catch
+                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(num_res_val) if pd.notna(num_res_val) and num_res_val != "" else None
+                except ValueError:
+                    # If conversion fails, set to None to be caught by validation
+                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = None
 
             # Recuperar las notas de la tabla editada
-            st.session_state.data_input[esp][r_key] = [
-                edited_df_r.iloc[i][f"{r_key} Nota 1"],
-                edited_df_r.iloc[i][f"{r_key} Nota 2"],
-                edited_df_r.iloc[i][f"{r_key} Nota 3"]
-            ]
+            updated_notes = []
+            for j in range(1, 4): # For Nota 1, Nota 2, Nota 3
+                note_val = edited_df_r.iloc[i][f"{r_key} Nota {j}"]
+                try:
+                    # Convert to float only if not None/NaN, otherwise keep as None for validation to catch
+                    updated_notes.append(float(note_val) if pd.notna(note_val) and note_val != "" else None)
+                except ValueError:
+                    updated_notes.append(None) # If conversion fails, set to None
+            st.session_state.data_input[esp][r_key] = updated_notes
             
 
     col_next_step5, col_back_step5 = st.columns(2)
@@ -501,25 +510,23 @@ elif st.session_state.current_step == 5:
                 for r_num in range(1, 6):
                     num_res_key = f"num_residentes_R{r_num}"
                     
-                    # Validación para 'num_residentes'
-                    # Convertir a int si es posible para validar, si es None o NaN, sigue siendo un error
                     num_res_value = data[num_res_key]
-                    if num_res_value is None or pd.isna(num_res_value):
-                        validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío.")
-                    elif not isinstance(num_res_value, (int, float)):
-                        validation_errors.append(f"En '{esp}', '{num_res_key}': El valor '{num_res_value}' no es un número válido.")
-                    else:
-                        num_res_value = int(num_res_value) # Convertir a int para la validación numérica
-                        if num_res_value < 0:
-                            validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede ser negativo.")
-                        st.session_state.data_input[esp][num_res_key] = num_res_value # Asegurar que se guarda como int
+                    
+                    # Validation for 'num_residentes'
+                    if num_res_value is None: # Now None explicitly means empty or invalid
+                        # Only raise error if the field was enabled and meant for user input
+                        is_num_res_disabled = not all_checked and f'R{r_num}' not in st.session_state.selected_rs_for_input
+                        if not is_num_res_disabled: # If it was expected to have a value
+                            validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío o no es un número válido.")
+                    elif not isinstance(num_res_value, int) or num_res_value < 0: # Ensure it's an int and non-negative
+                        validation_errors.append(f"En '{esp}', '{num_res_key}': El valor '{num_res_value}' no es un número válido o es negativo.")
+
 
                     # Validar notas (entre 0 y 10, hasta 2 decimales)
-                    for i, note in enumerate(data[f'R{r_num}']):
-                        if note is not None and pd.notna(note):
-                            if not isinstance(note, (int, float)) or not (0 <= note <= 10):
-                                validation_errors.append(f"En '{esp}', Nota {i+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
-                            
+                    for k, note in enumerate(data[f'R{r_num}']):
+                        if note is not None: # Now None explicitly means empty or invalid from the previous update
+                            if not isinstance(note, float) or not (0 <= note <= 10):
+                                validation_errors.append(f"En '{esp}', Nota {k+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
             
             if validation_errors:
                 for error in validation_errors:
