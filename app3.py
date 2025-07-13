@@ -242,7 +242,7 @@ elif st.session_state.current_step == 2:
     * Debe rellenar las notas de los residentes. Los valores aceptados no pueden ser superiores a **10** y pueden contener **2 decimales**.
     * Si no rellena las 3 notas más altas de alguna especialidad, **NO debe poner un 0** en la casilla vacía, simplemente no introduzca ningún valor numérico.
     * <span style='color: red;'>**Importante:** Para la introducción de las notas es posible que tenga que hacerlo dos veces por cada celda, **NO es un error**, es un proceso de validación del programa. Disculpe las molestias.</span>
-    """)
+    """, unsafe_allow_html=True)
 
     st.session_state.info_understood = st.checkbox("He comprendido las normas del programa")
 
@@ -378,28 +378,23 @@ elif st.session_state.current_step == 5:
         input_data_df,
         column_config={
             "Especialidad": st.column_config.Column("Especialidad", disabled=True),
-            "Nº R1 Evaluados": st.column_config.NumberColumn("Nº R1 Evaluados", min_value=0, format="%d", help="Número de residentes R1 evaluados en esta especialidad.",
-                                                             widget_kwargs={"style": {"background-color": "#e0f2f7"}}), # Color de fondo
+            "Nº R1 Evaluados": st.column_config.NumberColumn("Nº R1 Evaluados", min_value=0, format="%d", help="Número de residentes R1 evaluados en esta especialidad."),
             "R1 Nota 1": st.column_config.NumberColumn("R1 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
             "R1 Nota 2": st.column_config.NumberColumn("R1 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
             "R1 Nota 3": st.column_config.NumberColumn("R1 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R2 Evaluados": st.column_config.NumberColumn("Nº R2 Evaluados", min_value=0, format="%d", help="Número de residentes R2 evaluados en esta especialidad.",
-                                                             widget_kwargs={"style": {"background-color": "#e0f2f7"}}), # Color de fondo
+            "Nº R2 Evaluados": st.column_config.NumberColumn("Nº R2 Evaluados", min_value=0, format="%d", help="Número de residentes R2 evaluados en esta especialidad."),
             "R2 Nota 1": st.column_config.NumberColumn("R2 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
             "R2 Nota 2": st.column_config.NumberColumn("R2 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
             "R2 Nota 3": st.column_config.NumberColumn("R2 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R3 Evaluados": st.column_config.NumberColumn("Nº R3 Evaluados", min_value=0, format="%d", help="Número de residentes R3 evaluados en esta especialidad.",
-                                                             widget_kwargs={"style": {"background-color": "#e0f2f7"}}), # Color de fondo
+            "Nº R3 Evaluados": st.column_config.NumberColumn("Nº R3 Evaluados", min_value=0, format="%d", help="Número de residentes R3 evaluados en esta especialidad."),
             "R3 Nota 1": st.column_config.NumberColumn("R3 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
             "R3 Nota 2": st.column_config.NumberColumn("R3 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
             "R3 Nota 3": st.column_config.NumberColumn("R3 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R4 Evaluados": st.column_config.NumberColumn("Nº R4 Evaluados", min_value=0, format="%d", help="Número de residentes R4 evaluados en esta especialidad.",
-                                                             widget_kwargs={"style": {"background-color": "#e0f2f7"}}), # Color de fondo
+            "Nº R4 Evaluados": st.column_config.NumberColumn("Nº R4 Evaluados", min_value=0, format="%d", help="Número de residentes R4 evaluados en esta especialidad."),
             "R4 Nota 1": st.column_config.NumberColumn("R4 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
             "R4 Nota 2": st.column_config.NumberColumn("R4 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
             "R4 Nota 3": st.column_config.NumberColumn("R4 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R5 Evaluados": st.column_config.NumberColumn("Nº R5 Evaluados", min_value=0, format="%d", help="Número de residentes R5 evaluados en esta especialidad.",
-                                                             widget_kwargs={"style": {"background-color": "#e0f2f7"}}), # Color de fondo
+            "Nº R5 Evaluados": st.column_config.NumberColumn("Nº R5 Evaluados", min_value=0, format="%d", help="Número de residentes R5 evaluados en esta especialidad."),
             "R5 Nota 1": st.column_config.NumberColumn("R5 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
             "R5 Nota 2": st.column_config.NumberColumn("R5 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
             "R5 Nota 3": st.column_config.NumberColumn("R5 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
@@ -468,7 +463,7 @@ elif st.session_state.current_step == 5:
             validation_errors = []
             for esp, data in st.session_state.data_input.items():
                 for r_num in range(1, 6):
-                    num_res_key = f"num_residentes_{r_num}"
+                    num_res_key = f"num_residentes_R{r_num}"
                     if data[num_res_key] is None or pd.isna(data[num_res_key]) or not isinstance(data[num_res_key], (int, float)) or data[num_res_key] < 0:
                         validation_errors.append(f"En '{esp}', '{num_res_key}' debe ser un número entero no negativo y no puede estar vacío.")
 
