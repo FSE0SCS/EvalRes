@@ -2,10 +2,10 @@ import os
 import streamlit as st
 import pandas as pd
 import io
-import requests # Nuevo requisito para MailGun
-from dotenv import load_dotenv # ¡Añade esta línea!
+import requests
+from dotenv import load_dotenv
 
-load_dotenv() # ¡Añade esta línea para cargar el .env!
+load_dotenv()
 
 # --- Configuración General ---
 st.set_page_config(
@@ -128,11 +128,11 @@ def calculate_average(notes):
 
 def reset_selection_page():
     """Reinicia el estado de la sesión para volver a la página de selección de Área/Dirección."""
-    st.session_state.current_step = 2 # Ahora el paso 2 es la página de información
+    st.session_state.current_step = 2
     st.session_state.area_selected = None
     st.session_state.direccion_selected = None
     st.session_state.confirm_selection = False
-    st.session_state.info_understood = False # Resetear la comprensión de normas
+    st.session_state.info_understood = False
 
 def login_successful():
     """Marca la sesión como logueada."""
@@ -152,7 +152,7 @@ def send_email_with_mailgun(recipient_email, subject, text, attachment=None, fil
     
     files = []
     if attachment:
-        attachment.seek(0) # Asegurarse de que el puntero está al inicio
+        attachment.seek(0)
         files.append(("attachment", (filename, attachment.read(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
 
     try:
@@ -187,7 +187,7 @@ if 'direccion_selected' not in st.session_state:
     st.session_state.direccion_selected = None
 if 'confirm_selection' not in st.session_state:
     st.session_state.confirm_selection = False
-if 'info_understood' not in st.session_state: # Nuevo estado para la pantalla de información
+if 'info_understood' not in st.session_state:
     st.session_state.info_understood = False
 if 'data_input' not in st.session_state:
     st.session_state.data_input = {}
@@ -197,7 +197,8 @@ if 'total_residentes_r' not in st.session_state:
     st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
 if 'note_entry_summary' not in st.session_state:
     st.session_state.note_entry_summary = pd.DataFrame()
-
+if 'selected_rs_for_input' not in st.session_state: # Nuevo estado para las casillas de R
+    st.session_state.selected_rs_for_input = []
 
 # --- Interfaz de Usuario y Flujo del Programa ---
 
@@ -216,11 +217,12 @@ if not st.session_state.logged_in:
     st.markdown("##### Historial de Versiones")
     st.markdown("- **Versión 1.0 (2025-07-11):** Implementación inicial del flujo de trabajo completo, control de acceso y generación de Excel.")
     st.markdown("- **Versión 1.1 (2025-07-13):** Añadida pantalla de información y normas, reestructuración de la entrada de datos por R, resumen de datos introducidos, y preparación para envío de correo con MailGun.")
+    st.markdown("- **Versión 1.2 (2025-07-14):** Mejora de la interfaz de entrada de notas, dividiendo la tabla en 5 sub-tablas por R y añadiendo selectores para pre-rellenar con '0'.")
     st.stop()
 
 
 # Flujo principal de la aplicación
-st.title("Evaluación de Notas de Residentes 1.1 – F.S.E. – S.C.S. 🏥")
+st.title("Evaluación de Notas de Residentes 1.2 – F.S.E. – S.C.S. 🏥")
 st.markdown("---")
 
 # 1º: Pantalla de bienvenida
@@ -228,7 +230,7 @@ if st.session_state.current_step == 1:
     st.header("Bienvenido al programa de Evaluación de Notas de Residentes")
     st.write("Haz clic en 'Iniciar Aplicativo' para comenzar el proceso.")
     if st.button("Iniciar Aplicativo"):
-        st.session_state.current_step = 2 # Ir a la nueva pantalla de información
+        st.session_state.current_step = 2
         st.rerun()
 
 # 2º: Pantalla de Información y Normas (NUEVO PASO)
@@ -248,7 +250,7 @@ elif st.session_state.current_step == 2:
 
     if st.button("CONTINUAR"):
         if st.session_state.info_understood:
-            st.session_state.current_step = 3 # Ir a la selección de Área/Dirección (anteriormente Paso 2)
+            st.session_state.current_step = 3
             st.rerun()
         else:
             st.warning("Debe marcar la casilla 'He comprendido las normas del programa' para continuar.")
@@ -294,14 +296,14 @@ elif st.session_state.current_step == 3:
     with col_next_step3:
         if st.button("Siguiente"):
             if st.session_state.area_selected and st.session_state.direccion_selected:
-                st.session_state.current_step = 4 # Ir a la confirmación (anteriormente Paso 3)
+                st.session_state.current_step = 4
                 st.session_state.confirm_selection = False
                 st.rerun()
             else:
                 st.warning("Por favor, selecciona un Área y una Dirección/Gerencia para continuar.")
     with col_back_step3:
         if st.button("ATRÁS", key="back_from_step3"):
-            st.session_state.current_step = 2 # Volver a la pantalla de información
+            st.session_state.current_step = 2
             st.rerun()
 
 # 4º: Mensaje de confirmación (Ahora Paso 4)
@@ -314,12 +316,12 @@ elif st.session_state.current_step == 4:
     col_si, col_atras = st.columns(2)
     with col_si:
         if st.button("SI", key="confirm_si"):
-            st.session_state.current_step = 5 # Ir a la introducción de datos (anteriormente Paso 5)
+            st.session_state.current_step = 5
             st.session_state.confirm_selection = True
             st.rerun()
     with col_atras:
         if st.button("ATRÁS", key="confirm_atras"):
-            st.session_state.current_step = 3 # Volver a la selección de Área/Dirección
+            st.session_state.current_step = 3
             st.rerun()
 
 # 5º: Zona de trabajo - Introducción de datos (Ahora Paso 5)
@@ -332,11 +334,11 @@ elif st.session_state.current_step == 5:
     if not especialidades_para_rellenar:
         st.warning("No se encontraron especialidades para la Dirección/Gerencia seleccionada. Por favor, vuelve al paso anterior.")
         if st.button("Volver al Paso 2"):
-            st.session_state.current_step = 3 # Volver a la selección de Área/Dirección
+            st.session_state.current_step = 3
             st.rerun()
         st.stop()
 
-    # Estructura para almacenar los datos, incluyendo 'num_residentes_R1' a 'num_residentes_R5'
+    # Inicializar data_input si la dirección ha cambiado o es la primera vez
     if 'data_input' not in st.session_state or st.session_state.data_input_direccion != st.session_state.direccion_selected:
         st.session_state.data_input = {
             esp: {
@@ -349,93 +351,214 @@ elif st.session_state.current_step == 5:
             for esp in especialidades_para_rellenar
         }
         st.session_state.data_input_direccion = st.session_state.direccion_selected
+        st.session_state.selected_rs_for_input = [] # Resetear selecciones al cambiar de dirección
 
+    st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
-    st.markdown("### Rellene los campos a continuación para cada especialidad:")
+    col_r1, col_r2, col_r3, col_r4, col_r5, col_all = st.columns(6)
+
+    with col_r1:
+        r1_checked = st.checkbox("R1", key="r1_checkbox")
+    with col_r2:
+        r2_checked = st.checkbox("R2", key="r2_checkbox")
+    with col_r3:
+        r3_checked = st.checkbox("R3", key="r3_checkbox")
+    with col_r4:
+        r4_checked = st.checkbox("R4", key="r4_checkbox")
+    with col_r5:
+        r5_checked = st.checkbox("R5", key="r5_checkbox")
+    with col_all:
+        all_checked = st.checkbox("Todos", key="all_checkbox")
+
+    current_selected_rs = []
+    if r1_checked:
+        current_selected_rs.append('R1')
+    if r2_checked:
+        current_selected_rs.append('R2')
+    if r3_checked:
+        current_selected_rs.append('R3')
+    if r4_checked:
+        current_selected_rs.append('R4')
+    if r5_checked:
+        current_selected_rs.append('R5')
+
+    # Lógica para manejar "Todos"
+    if all_checked:
+        current_selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
+        # Desmarcar las individuales si "Todos" está marcado
+        if not r1_checked: st.session_state.r1_checkbox = True
+        if not r2_checked: st.session_state.r2_checkbox = True
+        if not r3_checked: st.session_state.r3_checkbox = True
+        if not r4_checked: st.session_state.r4_checkbox = True
+        if not r5_checked: st.session_state.r5_checkbox = True
+    elif not all_checked and 'all_checkbox' in st.session_state and st.session_state.all_checkbox:
+        # Si "Todos" estaba marcado y ahora se desmarca, desmarcar individuales
+        st.session_state.r1_checkbox = False
+        st.session_state.r2_checkbox = False
+        st.session_state.r3_checkbox = False
+        st.session_state.r4_checkbox = False
+        st.session_state.r5_checkbox = False
+        current_selected_rs = [] # Para limpiar las selecciones individuales
+
+    # Sincronizar el estado de sesión con las selecciones actuales
+    if st.session_state.selected_rs_for_input != current_selected_rs:
+        st.session_state.selected_rs_for_input = current_selected_rs
+        # Forzar un rerun si la selección ha cambiado para aplicar el pre-relleno
+        st.rerun()
+
     st.info("💡 **Importante:** Para las notas, si no va a rellenar las 3 notas más altas, deje los campos vacíos. No ponga '0', ya que afectaría a la media. Las notas deben estar entre 0 y 10, con hasta 2 decimales.")
+    st.info("Cuando selecciona un R, la tabla de ese R se activa para la edición. Los R no seleccionados tendrán su 'Nº Evaluados' rellenado con 0.")
 
-    # Preparar el DataFrame para st.data_editor con la nueva estructura
-    input_data_list = []
-    for esp in especialidades_para_rellenar:
-        data = st.session_state.data_input[esp]
-        input_data_list.append({
-            "Especialidad": esp,
-            "Nº R1 Evaluados": data['num_residentes_R1'],
-            "R1 Nota 1": data['R1'][0], "R1 Nota 2": data['R1'][1], "R1 Nota 3": data['R1'][2],
-            "Nº R2 Evaluados": data['num_residentes_R2'],
-            "R2 Nota 1": data['R2'][0], "R2 Nota 2": data['R2'][1], "R2 Nota 3": data['R2'][2],
-            "Nº R3 Evaluados": data['num_residentes_R3'],
-            "R3 Nota 1": data['R3'][0], "R3 Nota 2": data['R3'][1], "R3 Nota 3": data['R3'][2],
-            "Nº R4 Evaluados": data['num_residentes_R4'],
-            "R4 Nota 1": data['R4'][0], "R4 Nota 2": data['R4'][1], "R4 Nota 3": data['R4'][2],
-            "Nº R5 Evaluados": data['num_residentes_R5'],
-            "R5 Nota 1": data['R5'][0], "R5 Nota 2": data['R5'][1], "R5 Nota 3": data['R5'][2],
-            "Nº Residentes Aptos en la Evaluación final de residencia": 0 # Esto se calculará al final
-        })
-    input_data_df = pd.DataFrame(input_data_list)
+    # Generar las 5 tablas dinámicamente
+    edited_dfs = {} # Diccionario para almacenar los DataFrames editados por R
 
-    edited_df = st.data_editor(
-        input_data_df,
-        column_config={
+    for r_num in range(1, 6):
+        r_key = f'R{r_num}'
+        
+        # Preparar datos para la tabla actual de R
+        table_data_list = []
+        for esp in especialidades_para_rellenar:
+            num_res = st.session_state.data_input[esp][f'num_residentes_{r_key}']
+            notes = st.session_state.data_input[esp][r_key]
+
+            # Aplicar la lógica de pre-relleno si 'Todos' no está marcado y este R no está seleccionado
+            if not all_checked and r_key not in st.session_state.selected_rs_for_input:
+                num_res = 0 # Rellenar con 0 si no está seleccionado y no es 'Todos'
+                # Las notas se mantienen como están (None/vacío) para el cálculo de la media
+                # o se podrían rellenar con 0 para coherencia visual, pero es mejor dejar None
+                # para que el cálculo de la media los ignore explícitamente.
+                # Aquí no modificamos las notas, solo el número de evaluados.
+            
+            table_data_list.append({
+                "Especialidad": esp,
+                f"Nº {r_key} Evaluados": num_res,
+                f"{r_key} Nota 1": notes[0],
+                f"{r_key} Nota 2": notes[1],
+                f"{r_key} Nota 3": notes[2]
+            })
+        
+        table_df = pd.DataFrame(table_data_list)
+
+        st.markdown(f"#### Datos para {r_key}")
+        
+        # Determinar si la columna de Nº Evaluados debe estar deshabilitada
+        is_num_res_disabled = not all_checked and r_key not in st.session_state.selected_rs_for_input
+
+        # Configuración de columnas para el st.data_editor
+        column_config = {
             "Especialidad": st.column_config.Column("Especialidad", disabled=True),
-            "Nº R1 Evaluados": st.column_config.NumberColumn("Nº R1 Evaluados", min_value=0, format="%d", help="Número de residentes R1 evaluados en esta especialidad."),
-            "R1 Nota 1": st.column_config.NumberColumn("R1 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R1 Nota 2": st.column_config.NumberColumn("R1 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R1 Nota 3": st.column_config.NumberColumn("R1 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R2 Evaluados": st.column_config.NumberColumn("Nº R2 Evaluados", min_value=0, format="%d", help="Número de residentes R2 evaluados en esta especialidad."),
-            "R2 Nota 1": st.column_config.NumberColumn("R2 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R2 Nota 2": st.column_config.NumberColumn("R2 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R2 Nota 3": st.column_config.NumberColumn("R2 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R3 Evaluados": st.column_config.NumberColumn("Nº R3 Evaluados", min_value=0, format="%d", help="Número de residentes R3 evaluados en esta especialidad."),
-            "R3 Nota 1": st.column_config.NumberColumn("R3 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R3 Nota 2": st.column_config.NumberColumn("R3 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R3 Nota 3": st.column_config.NumberColumn("R3 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R4 Evaluados": st.column_config.NumberColumn("Nº R4 Evaluados", min_value=0, format="%d", help="Número de residentes R4 evaluados en esta especialidad."),
-            "R4 Nota 1": st.column_config.NumberColumn("R4 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R4 Nota 2": st.column_config.NumberColumn("R4 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R4 Nota 3": st.column_config.NumberColumn("R4 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº R5 Evaluados": st.column_config.NumberColumn("Nº R5 Evaluados", min_value=0, format="%d", help="Número de residentes R5 evaluados en esta especialidad."),
-            "R5 Nota 1": st.column_config.NumberColumn("R5 Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R5 Nota 2": st.column_config.NumberColumn("R5 Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            "R5 Nota 3": st.column_config.NumberColumn("R5 Nota 3", min_value=0.0, max_value=10.0, format="%.2f"),
-            "Nº Residentes Aptos en la Evaluación final de residencia": st.column_config.NumberColumn("Nº Residentes Aptos en la Evaluación final de residencia", disabled=True, format="%d")
-        },
-        num_rows="fixed", # Ahora es fijo porque las especialidades ya están predefinidas
-        use_container_width=True,
-        key="data_input_editor" # Añadir una clave para evitar re-renderizados innecesarios
-    )
+            f"Nº {r_key} Evaluados": st.column_config.NumberColumn(
+                f"Nº {r_key} Evaluados",
+                min_value=0, format="%d", help=f"Número de residentes {r_key} evaluados en esta especialidad.",
+                disabled=is_num_res_disabled # Deshabilitar si no está seleccionado
+            ),
+            f"{r_key} Nota 1": st.column_config.NumberColumn(f"{r_key} Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
+            f"{r_key} Nota 2": st.column_config.NumberColumn(f"{r_key} Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
+            f"{r_key} Nota 3": st.column_config.NumberColumn(f"{r_key} Nota 3", min_value=0.0, max_value=10.0, format="%.2f")
+        }
 
-    # Actualizar st.session_state.data_input con los valores editados y calcular 'Nº Residentes Aptos'
-    st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
-    st.session_state.note_entry_summary = [] # Para el nuevo resumen
+        edited_df = st.data_editor(
+            table_df,
+            column_config=column_config,
+            num_rows="fixed",
+            use_container_width=True,
+            key=f"data_input_editor_{r_key}"
+        )
+        edited_dfs[r_key] = edited_df
 
+        st.markdown("---") # Separador entre tablas
+
+    # Actualizar st.session_state.data_input con los valores editados de todas las tablas
     for i, esp in enumerate(especialidades_para_rellenar):
-        # Actualizar número de residentes evaluados por R
-        st.session_state.data_input[esp]['num_residentes_R1'] = edited_df.iloc[i]["Nº R1 Evaluados"]
-        st.session_state.data_input[esp]['num_residentes_R2'] = edited_df.iloc[i]["Nº R2 Evaluados"]
-        st.session_state.data_input[esp]['num_residentes_R3'] = edited_df.iloc[i]["Nº R3 Evaluados"]
-        st.session_state.data_input[esp]['num_residentes_R4'] = edited_df.iloc[i]["Nº R4 Evaluados"]
-        st.session_state.data_input[esp]['num_residentes_R5'] = edited_df.iloc[i]["Nº R5 Evaluados"]
+        for r_num in range(1, 6):
+            r_key = f'R{r_num}'
+            edited_df_r = edited_dfs[r_key]
+            
+            # Recuperar el valor de 'Nº R_ Evaluados' de la tabla editada
+            num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Evaluados"]
+            # Si la columna estaba deshabilitada y el valor es 0, asegurarse de que se guarda como 0
+            if not all_checked and r_key not in st.session_state.selected_rs_for_input:
+                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
+            else:
+                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = num_res_val
 
-        # Actualizar notas
-        st.session_state.data_input[esp]['R1'] = [edited_df.iloc[i]["R1 Nota 1"], edited_df.iloc[i]["R1 Nota 2"], edited_df.iloc[i]["R1 Nota 3"]]
-        st.session_state.data_input[esp]['R2'] = [edited_df.iloc[i]["R2 Nota 1"], edited_df.iloc[i]["R2 Nota 2"], edited_df.iloc[i]["R2 Nota 3"]]
-        st.session_state.data_input[esp]['R3'] = [edited_df.iloc[i]["R3 Nota 1"], edited_df.iloc[i]["R3 Nota 2"], edited_df.iloc[i]["R3 Nota 3"]]
-        st.session_state.data_input[esp]['R4'] = [edited_df.iloc[i]["R4 Nota 1"], edited_df.iloc[i]["R4 Nota 2"], edited_df.iloc[i]["R4 Nota 3"]]
-        st.session_state.data_input[esp]['R5'] = [edited_df.iloc[i]["R5 Nota 1"], edited_df.iloc[i]["R5 Nota 2"], edited_df.iloc[i]["R5 Nota 3"]]
 
-        # Calcular 'Nº Residentes Aptos en la Evaluación final de residencia' y totales por R
-        total_aptos = 0
+            # Recuperar las notas de la tabla editada
+            st.session_state.data_input[esp][r_key] = [
+                edited_df_r.iloc[i][f"{r_key} Nota 1"],
+                edited_df_r.iloc[i][f"{r_key} Nota 2"],
+                edited_df_r.iloc[i][f"{r_key} Nota 3"]
+            ]
+            
+
+    col_next_step5, col_back_step5 = st.columns(2)
+
+    with col_next_step5:
+        if st.button("SIGUIENTE"):
+            # Validación antes de pasar al resumen
+            validation_errors = []
+            for esp, data in st.session_state.data_input.items():
+                for r_num in range(1, 6):
+                    num_res_key = f"num_residentes_R{r_num}"
+                    
+                    # Validación para 'num_residentes'
+                    # Convertir a int si es posible para validar, si es None o NaN, sigue siendo un error
+                    num_res_value = data[num_res_key]
+                    if num_res_value is None or pd.isna(num_res_value):
+                        validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío.")
+                    elif not isinstance(num_res_value, (int, float)):
+                        validation_errors.append(f"En '{esp}', '{num_res_key}': El valor '{num_res_value}' no es un número válido.")
+                    else:
+                        num_res_value = int(num_res_value) # Convertir a int para la validación numérica
+                        if num_res_value < 0:
+                            validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede ser negativo.")
+                        st.session_state.data_input[esp][num_res_key] = num_res_value # Asegurar que se guarda como int
+
+                    # Validar notas (entre 0 y 10, hasta 2 decimales)
+                    for i, note in enumerate(data[f'R{r_num}']):
+                        if note is not None and pd.notna(note):
+                            if not isinstance(note, (int, float)) or not (0 <= note <= 10):
+                                validation_errors.append(f"En '{esp}', Nota {i+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
+                            
+            
+            if validation_errors:
+                for error in validation_errors:
+                    st.error(error)
+                st.warning("Por favor, corrige los errores para poder continuar.")
+            else:
+                st.session_state.current_step = 6
+                st.rerun()
+
+    with col_back_step5:
+        if st.button("ATRÁS", key="back_from_step5"):
+            st.session_state.current_step = 4
+            st.rerun()
+
+# 6º: Resumen datos introducidos
+elif st.session_state.current_step == 6:
+    st.header("Paso 5: Resumen datos introducidos")
+    st.markdown("Usted ha introducido lo siguiente en este aplicativo:")
+
+    # Calcular totales y resumen de notas antes de mostrar
+    st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
+    st.session_state.note_entry_summary = []
+
+    for esp in especialidades_para_rellenar:
+        total_aptos_esp = 0
         note_summary_row = {"Especialidad": esp, "3 Notas": [], "2 Notas": [], "1 Nota": [], "Vacío": []}
 
         for r_num in range(1, 6):
-            num_res_col = f"Nº R{r_num} Evaluados"
-            if edited_df.iloc[i][num_res_col] is not None and pd.notna(edited_df.iloc[i][num_res_col]):
-                total_aptos += int(edited_df.iloc[i][num_res_col])
-                st.session_state.total_residentes_r[f'R{r_num}'] += int(edited_df.iloc[i][num_res_col])
+            r_key = f"R{r_num}"
+            
+            # Sumar el número de residentes evaluados para el total aptos
+            num_res_r_key = f"num_residentes_{r_key}"
+            if st.session_state.data_input[esp][num_res_r_key] is not None and pd.notna(st.session_state.data_input[esp][num_res_r_key]):
+                total_res_for_r = int(st.session_state.data_input[esp][num_res_r_key])
+                total_aptos_esp += total_res_for_r
+                st.session_state.total_residentes_r[r_key] += total_res_for_r
             
             # Contar notas para el resumen
-            notes_for_r = [n for n in st.session_state.data_input[esp][f'R{r_num}'] if n is not None and pd.notna(n) and float(n) != 0.0]
+            notes_for_r = [n for n in st.session_state.data_input[esp][r_key] if n is not None and pd.notna(n) and float(n) != 0.0]
             num_filled_notes = len(notes_for_r)
 
             if num_filled_notes == 3:
@@ -447,49 +570,12 @@ elif st.session_state.current_step == 5:
             elif num_filled_notes == 0:
                 note_summary_row["Vacío"].append(f"R{r_num}")
         
-        # Unir las listas para el resumen
         note_summary_row["3 Notas"] = ", ".join(note_summary_row["3 Notas"])
         note_summary_row["2 Notas"] = ", ".join(note_summary_row["2 Notas"])
         note_summary_row["1 Nota"] = ", ".join(note_summary_row["1 Nota"])
         note_summary_row["Vacío"] = ", ".join(note_summary_row["Vacío"])
         st.session_state.note_entry_summary.append(note_summary_row)
 
-
-    col_next_step5, col_back_step5 = st.columns(2)
-
-    with col_next_step5:
-        if st.button("SIGUIENTE"):
-            # Validación antes de pasar al resumen
-            validation_errors = []
-            for esp, data in st.session_state.data_input.items():
-                for r_num in range(1, 6):
-                    num_res_key = f"num_residentes_R{r_num}"
-                    if data[num_res_key] is None or pd.isna(data[num_res_key]) or not isinstance(data[num_res_key], (int, float)) or data[num_res_key] < 0:
-                        validation_errors.append(f"En '{esp}', '{num_res_key}' debe ser un número entero no negativo y no puede estar vacío.")
-
-                    # Validar notas (entre 0 y 10, hasta 2 decimales)
-                    for i, note in enumerate(data[f'R{r_num}']):
-                        if note is not None and pd.notna(note):
-                            if not isinstance(note, (int, float)) or not (0 <= note <= 10):
-                                validation_errors.append(f"En '{esp}', Nota {i+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
-            
-            if validation_errors:
-                for error in validation_errors:
-                    st.error(error)
-                st.warning("Por favor, corrige los errores para poder continuar.")
-            else:
-                st.session_state.current_step = 6 # Ir al resumen
-                st.rerun()
-
-    with col_back_step5:
-        if st.button("ATRÁS", key="back_from_step5"):
-            st.session_state.current_step = 4 # Volver a la confirmación
-            st.rerun()
-
-# 6º: Resumen datos introducidos (NUEVO PASO)
-elif st.session_state.current_step == 6:
-    st.header("Paso 5: Resumen datos introducidos")
-    st.markdown("Usted ha introducido lo siguiente en este aplicativo:")
 
     # Cuadro de Número de Residentes Evaluados
     st.markdown("##### Número de residentes evaluados por año")
@@ -514,35 +600,33 @@ elif st.session_state.current_step == 6:
             # Calcular medias y preparar DataFrame para Excel
             results = []
             n_residentes_data = []
-            for esp, data in st.session_state.data_input.items():
+            for esp in especialidades_para_rellenar:
                 row = {"Especialidad": esp}
-                total_aptos_esp = 0 # Para el total de aptos de la especialidad
+                total_aptos_esp = 0
 
                 for r_num in range(1, 6):
                     r_key = f"R{r_num}"
-                    notes = data[r_key]
+                    notes = st.session_state.data_input[esp][r_key]
                     avg = calculate_average(notes)
                     row[f"Media {r_key}"] = f"{avg:.2f}" if avg is not None else ""
 
-                    # Sumar el número de residentes evaluados para el total aptos
                     num_res_r_key = f"num_residentes_{r_key}"
-                    if data[num_res_r_key] is not None and pd.notna(data[num_res_r_key]):
-                        total_aptos_esp += int(data[num_res_r_key])
+                    if st.session_state.data_input[esp][num_res_r_key] is not None and pd.notna(st.session_state.data_input[esp][num_res_r_key]):
+                        total_aptos_esp += int(st.session_state.data_input[esp][num_res_r_key])
                 
-                row["Nº Residentes Aptos"] = total_aptos_esp # Agregar esta columna aquí
+                row["Nº Residentes Aptos"] = total_aptos_esp
                 results.append(row)
 
                 # Datos para la hoja "N_Residentes" con la nueva estructura
                 n_residentes_data.append({
                     "Especialidad": esp,
-                    "Nº R1 Evaluados": data['num_residentes_R1'],
-                    "Nº R2 Evaluados": data['num_residentes_R2'],
-                    "Nº R3 Evaluados": data['num_residentes_R3'],
-                    "Nº R4 Evaluados": data['num_residentes_R4'],
-                    "Nº R5 Evaluados": data['num_residentes_R5'],
+                    "Nº R1 Evaluados": st.session_state.data_input[esp]['num_residentes_R1'],
+                    "Nº R2 Evaluados": st.session_state.data_input[esp]['num_residentes_R2'],
+                    "Nº R3 Evaluados": st.session_state.data_input[esp]['num_residentes_R3'],
+                    "Nº R4 Evaluados": st.session_state.data_input[esp]['num_residentes_R4'],
+                    "Nº R5 Evaluados": st.session_state.data_input[esp]['num_residentes_R5'],
                     "Nº Residentes Aptos en la Evaluación final de residencia": total_aptos_esp
                 })
-
 
             output_df = pd.DataFrame(results)
 
@@ -564,8 +648,7 @@ elif st.session_state.current_step == 6:
             st.session_state.excel_output = output
             st.session_state.excel_filename = f"Evaluacion_Notas_{excel_sheet_name}.xlsx"
             
-            # Enviar por correo (sin el archivo aún, solo el mensaje de éxito/error)
-            # Pasamos una copia del BytesIO para que el original no se consuma al leerlo para el adjunto
+            # Enviar por correo
             email_sent = send_email_with_mailgun(
                 MAILGUN_RECIPIENT_EMAIL,
                 f"Informe de Evaluación de Notas - {excel_sheet_name}",
@@ -574,15 +657,15 @@ elif st.session_state.current_step == 6:
                 filename=st.session_state.excel_filename
             )
 
-            st.session_state.current_step = 7 # Ir a la descarga y mensaje de correo
+            st.session_state.current_step = 7
             st.rerun()
 
     with col_review:
         if st.button("REVISAR"):
-            st.session_state.current_step = 5 # Volver a la introducción de datos
+            st.session_state.current_step = 5
             st.rerun()
 
-# 7º: Descarga y mensaje de envío por correo (Ahora Paso 6)
+# 7º: Descarga y mensaje de envío por correo
 elif st.session_state.current_step == 7:
     st.header("Paso 6: Descarga del Informe")
     st.success("¡El informe se ha generado con éxito! Puedes descargarlo ahora.")
@@ -603,7 +686,7 @@ elif st.session_state.current_step == 7:
     st.info("💡 **Aclaración:** Streamlit no permite ventanas emergentes que bloqueen la aplicación para confirmaciones directas. Este mensaje es la forma más clara de recordarte la acción post-descarga y de informar si el envío automático fue exitoso o no.")
 
     if st.button("Volver al Inicio (nueva evaluación)"):
-        st.session_state.clear() # Limpiar todo el estado de la sesión para reiniciar
+        st.session_state.clear()
         st.rerun()
 
 # 8º: Botón de salir del aplicativo (Siempre visible en la barra lateral)
@@ -614,6 +697,6 @@ if st.sidebar.button("Salir del Aplicativo 🚪"):
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("##### ℹ️ Información del Aplicativo")
-st.sidebar.write("Versión: 1.1")
+st.sidebar.write("Versión: 1.2") # Actualizar la versión
 st.sidebar.write("Desarrollado para: F.S.E. – S.C.S.")
 st.sidebar.write("Fecha: Julio 2025")
