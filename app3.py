@@ -203,7 +203,7 @@ if 'note_entry_summary' not in st.session_state:
 
 # Control de Acceso
 if not st.session_state.logged_in:
-    st.title("🔐 Acceso al Aplicativo de Evaluación de Notas")
+    st.title("🔐 Acceso al Aplicativo de Evaluación de Notas de Residentes")
     st.write("Por favor, introduce la contraseña para continuar.")
     password_input = st.text_input("Contraseña", type="password", key="password_input")
     if st.button("Iniciar Sesión"):
@@ -599,7 +599,7 @@ elif st.session_state.current_step == 7:
         st.error("No se encontró el archivo Excel. Por favor, regresa y genera el informe nuevamente.")
 
     st.markdown("---")
-    st.warning("⚠️ **Recordatorio Importante:** Después de descargar el archivo Excel, si el envío automático falló, o quieres confirmarlo, por favor, asegúrate de enviarlo a **fse.scs.evalres@gmail.com** 📧.")
+    st.warning("⚠️ **Recordatorio Importante:** Después de descargar el archivo Excel, por favor, asegúrate de enviarlo a **fse.scs@gobiernodecanarias.org** 📧.")
     st.info("💡 **Aclaración:** Streamlit no permite ventanas emergentes que bloqueen la aplicación para confirmaciones directas. Este mensaje es la forma más clara de recordarte la acción post-descarga y de informar si el envío automático fue exitoso o no.")
 
     if st.button("Volver al Inicio (nueva evaluación)"):
