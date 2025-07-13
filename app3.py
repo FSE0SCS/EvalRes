@@ -197,6 +197,8 @@ if 'total_residentes_r' not in st.session_state:
     st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
 if 'note_entry_summary' not in st.session_state:
     st.session_state.note_entry_summary = pd.DataFrame()
+if 'especialidades_para_rellenar' not in st.session_state: # <--- AÑADE ESTA LÍNEA
+    st.session_state.especialidades_para_rellenar = []      # <--- AÑADE ESTA LÍNEA
 if 'selected_rs_for_input' not in st.session_state: # Nuevo estado para las casillas de R
     st.session_state.selected_rs_for_input = []
 
@@ -318,6 +320,8 @@ elif st.session_state.current_step == 4:
         if st.button("SI", key="confirm_si"):
             st.session_state.current_step = 5
             st.session_state.confirm_selection = True
+            # Almacenar especialidades_para_rellenar en session_state aquí
+            st.session_state.especialidades_para_rellenar = ESPECIALIDADES_POR_DIRECCION.get(st.session_state.direccion_selected, []) # <--- AÑADE ESTA LÍNEA
             st.rerun()
     with col_atras:
         if st.button("ATRÁS", key="confirm_atras"):
@@ -329,7 +333,7 @@ elif st.session_state.current_step == 5:
     st.header("Paso 4: Introducción de Datos de Residentes")
     st.write(f"Dirección/Gerencia seleccionada: **{st.session_state.direccion_selected}**")
 
-    especialidades_para_rellenar = ESPECIALIDADES_POR_DIRECCION.get(st.session_state.direccion_selected, [])
+    especialidades_para_rellenar = st.session_state.especialidades_para_rellenar # <--- MODIFICA ESTA LÍNEA
 
     if not especialidades_para_rellenar:
         st.warning("No se encontraron especialidades para la Dirección/Gerencia seleccionada. Por favor, vuelve al paso anterior.")
@@ -550,7 +554,7 @@ elif st.session_state.current_step == 6:
     st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
     st.session_state.note_entry_summary = []
 
-    for esp in especialidades_para_rellenar:
+    for esp in st.session_state.especialidades_para_rellenar: # <--- MODIFICA ESTA LÍNEA (la línea 553 de tu error)
         total_aptos_esp = 0
         note_summary_row = {"Especialidad": esp, "3 Notas": [], "2 Notas": [], "1 Nota": [], "Vacío": []}
 
