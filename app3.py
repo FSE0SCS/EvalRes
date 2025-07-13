@@ -611,7 +611,7 @@ elif st.session_state.current_step == 6:
             # Calcular medias y preparar DataFrame para Excel
             results = []
             n_residentes_data = []
-            for esp in especialidades_para_rellenar:
+            for esp in st.session_state.especialidades_para_rellenar: # <--- ASÍ DEBE QUEDAR LA LÍNEA CORREGIDA
                 row = {"Especialidad": esp}
                 total_aptos_esp = 0
 
