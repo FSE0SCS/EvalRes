@@ -242,10 +242,10 @@ elif st.session_state.current_step == 2:
     **Bienvenidos al programa para calcular las medias de los residentes**
 
     * Debe seleccionar su **ÁREA** de operación y su **DIRECCIÓN/GERENCIA** para obtener acceso a las especialidades evaluadas.
-    * Debe rellenar el **número de residentes evaluados** en el ejercicio en curso, para todas las especialidades y año de residencia.
+    * Debe rellenar el **NUMERO DE RESIDENTES QUE FINALIZAN LA RESIDENCIA** en el ejercicio en curso, para las diferentes especialidades.
     * Debe rellenar las notas de los residentes. Los valores aceptados no pueden ser superiores a **10** y pueden contener **2 decimales**.
     * Si no rellena las 3 notas más altas de alguna especialidad, **NO debe poner un 0** en la casilla vacía, simplemente no introduzca ningún valor numérico.
-    * <span style='color: red;'>**Importante:** Para la introducción de las notas es posible que tenga que hacerlo dos veces por cada celda, **NO es un error**, es un proceso de validación del programa. Disculpe las molestias.</span>
+    * <span style='color: red;'>**IMPORTANTE:** Para la introducción de las notas es posible que tenga que hacerlo dos veces por cada celda, **NO es un error**, es un proceso de validación del programa. Disculpe las molestias.</span>
     """, unsafe_allow_html=True)
 
     st.session_state.info_understood = st.checkbox("He comprendido las normas del programa")
@@ -431,7 +431,7 @@ elif st.session_state.current_step == 5:
             
             table_data_list.append({
                 "Especialidad": esp,
-                f"Nº {r_key} Evaluados": num_res,
+                f"Nº {r_key} Finalizados": num_res,
                 f"{r_key} Nota 1": notes[0],
                 f"{r_key} Nota 2": notes[1],
                 f"{r_key} Nota 3": notes[2]
@@ -447,9 +447,9 @@ elif st.session_state.current_step == 5:
         # Configuración de columnas para el st.data_editor
         column_config = {
             "Especialidad": st.column_config.Column("Especialidad", disabled=True),
-            f"Nº {r_key} Evaluados": st.column_config.NumberColumn(
-                f"Nº {r_key} Evaluados",
-                min_value=0, format="%d", help=f"Número de residentes {r_key} evaluados en esta especialidad.",
+            f"Nº {r_key} Finalizados": st.column_config.NumberColumn(
+                f"Nº {r_key} Finalizados",
+                min_value=0, format="%d", help=f"Número de residentes {r_key} finalizados en esta especialidad.",
                 disabled=is_num_res_disabled # Deshabilitar si no está seleccionado
             ),
             f"{r_key} Nota 1": st.column_config.NumberColumn(f"{r_key} Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
@@ -474,7 +474,7 @@ elif st.session_state.current_step == 5:
             r_key = f'R{r_num}'
             edited_df_r = edited_dfs[r_key]
             
-            # Determine if the 'Nº Evaluados' column for this R is disabled
+            # Determine if the 'Nº Finalizados' column for this R is disabled
             is_num_res_disabled = not all_checked and r_key not in st.session_state.selected_rs_for_input
 
             # Handle num_residentes_R
@@ -483,7 +483,7 @@ elif st.session_state.current_step == 5:
                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
             else:
                 # If enabled, get the value from the edited DataFrame
-                num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Evaluados"]
+                num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Finalizados"]
                 # Try converting to int, handle potential None/NaN/empty string from user input
                 try:
                     # Convert to int only if not None/NaN, otherwise keep as None for validation to catch
@@ -589,16 +589,16 @@ elif st.session_state.current_step == 6:
 
 
     # Cuadro de Número de Residentes Evaluados
-    st.markdown("##### Número de residentes evaluados por año")
+    st.markdown("##### Número de residentes finalizados por año")
     residentes_evaluados_df = pd.DataFrame({
-        " ": ["Numero de residentes evaluados"],
+        " ": ["Numero de residentes finalizados"],
         "R1": [st.session_state.total_residentes_r['R1']],
         "R2": [st.session_state.total_residentes_r['R2']],
         "R3": [st.session_state.total_residentes_r['R3']],
         "R4": [st.session_state.total_residentes_r['R4']],
         "R5": [st.session_state.total_residentes_r['R5']]
     })
-    st.table(residentes_evaluados_df)
+    st.table(residentes_finalizados_df)
 
     # Cuadro de Rangos de Notas Introducidos
     st.markdown("##### Rangos de notas introducidos por especialidad y R")
@@ -631,12 +631,12 @@ elif st.session_state.current_step == 6:
                 # Datos para la hoja "N_Residentes" con la nueva estructura
                 n_residentes_data.append({
                     "Especialidad": esp,
-                    "Nº R1 Evaluados": st.session_state.data_input[esp]['num_residentes_R1'],
-                    "Nº R2 Evaluados": st.session_state.data_input[esp]['num_residentes_R2'],
-                    "Nº R3 Evaluados": st.session_state.data_input[esp]['num_residentes_R3'],
-                    "Nº R4 Evaluados": st.session_state.data_input[esp]['num_residentes_R4'],
-                    "Nº R5 Evaluados": st.session_state.data_input[esp]['num_residentes_R5'],
-                    "Nº Residentes Aptos en la Evaluación final de residencia": total_aptos_esp
+                    "Nº R1 Finalizados": st.session_state.data_input[esp]['num_residentes_R1'],
+                    "Nº R2 Finalizados": st.session_state.data_input[esp]['num_residentes_R2'],
+                    "Nº R3 Finalizados": st.session_state.data_input[esp]['num_residentes_R3'],
+                    "Nº R4 Finalizados": st.session_state.data_input[esp]['num_residentes_R4'],
+                    "Nº R5 Finalizados": st.session_state.data_input[esp]['num_residentes_R5'],
+                    "Nº Residentes que finalizan residencia en el año en curso": total_aptos_esp
                 })
 
             output_df = pd.DataFrame(results)
