@@ -590,7 +590,7 @@ elif st.session_state.current_step == 6:
 
     # Cuadro de Número de Residentes Evaluados
     st.markdown("##### Número de residentes finalizados por año")
-    residentes_evaluados_df = pd.DataFrame({
+    residentes_finalizados_df = pd.DataFrame({
         " ": ["Numero de residentes finalizados"],
         "R1": [st.session_state.total_residentes_r['R1']],
         "R2": [st.session_state.total_residentes_r['R2']],
