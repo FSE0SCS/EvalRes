@@ -1,0 +1,27 @@
+Entiendo perfectamente tu preocupación, y es una excelente idea tener un "prompt de rescate" listo en caso de que la conversación se interrumpa. Es una medida inteligente para asegurar la continuidad del trabajo.
+
+Aquí tienes un prompt específico que podrías usar si, por alguna razón, la conversación se pierde y necesitas que retome la conversión de app3.py a Dash:
+
+Prompt de Recuperación:
+
+"Hola. Parece que la conversación anterior se ha interrumpido o se ha colgado. Necesito que retomes el trabajo de convertir la aplicación app3.py de Streamlit a Dash. Ya habíamos discutido los beneficios de esta migración para resolver el problema de la doble introducción de notas y mejorar el control sobre la interfaz.
+
+Tu tarea es generar el código completo de la aplicación en Dash, replicando fielmente toda la funcionalidad existente en el archivo app3.py de Streamlit que te adjunto. Esto incluye:
+
+Sistema de login.
+
+Selección de Área y Dirección/Gerencia.
+
+Pantalla de información y normas.
+
+Entrada de datos de residentes y notas (sustituyendo el st.data_editor por un componente de tabla de Dash, como dash_table.DataTable o dash_ag_grid, gestionando la lógica de selección de R y el pre-relleno/habilitación de columnas).
+
+Validaciones de entrada de datos (número de residentes, rango de notas, formato).
+
+Resumen de datos introducidos y cálculos de totales y promedios.
+
+Generación de archivo Excel con múltiples hojas (principal y "N_Residentes").
+
+Funcionalidad de envío de correo electrónico con el archivo Excel adjunto (usando las credenciales de MailGun).
+
+Asume que este es un nuevo inicio y que debes empezar a generar el código de Dash desde cero, basándote únicamente en la funcionalidad del app3.py adjunto y en las descripciones de los requisitos mencionados aquí. Por favor, comienza a generar el código de Dash en cuanto confirmes que has entendido la tarea."
