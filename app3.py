@@ -359,31 +359,31 @@ elif st.session_state.current_step == 5:
 
     st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
-    # Estados iniciales
     if 'rs_checkbox_states' not in st.session_state:
         st.session_state.rs_checkbox_states = {'R1': False, 'R2': False, 'R3': False, 'R4': False, 'R5': False, 'Todos': False}
 
     cols = st.columns(6)
     r_labels = ['R1', 'R2', 'R3', 'R4', 'R5', 'Todos']
 
-    # Renderizar checkboxes sin provocar rerun
+    # Mostrar los checkboxes sin rerun
     for idx, r_label in enumerate(r_labels):
         current_value = st.session_state.rs_checkbox_states[r_label]
-        new_value = cols[idx].checkbox(r_label, value=current_value, key=f"{r_label}_checkbox_no_rerun")
-        st.session_state.rs_checkbox_states[r_label] = new_value
+        st.session_state.rs_checkbox_states[r_label] = cols[idx].checkbox(r_label, value=current_value, key=f"{r_label}_checkbox")
 
-    # Lógica de sincronización
+    # Lógica para determinar qué Rs están seleccionados
     selected_rs = [r for r in ['R1', 'R2', 'R3', 'R4', 'R5'] if st.session_state.rs_checkbox_states[r]]
 
+    # Sincronización de "Todos"
     if st.session_state.rs_checkbox_states['Todos']:
         selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
+        for r in ['R1', 'R2', 'R3', 'R4', 'R5']:
+            st.session_state.rs_checkbox_states[r] = True
     else:
         if len(selected_rs) == 5:
             st.session_state.rs_checkbox_states['Todos'] = True
         else:
             st.session_state.rs_checkbox_states['Todos'] = False
 
-    # Guardar R seleccionados
     st.session_state.selected_rs_for_input = selected_rs
 
     st.info("💡 Solo se activan los campos de los R seleccionados. Los demás se rellenan con 0 automáticamente.")
@@ -419,7 +419,7 @@ elif st.session_state.current_step == 5:
         st.markdown(f"#### Datos para {r_key}")
         
         # Determinar si la columna de Nº Evaluados debe estar deshabilitada
-        is_num_res_disabled = not all_checked and r_key not in st.session_state.selected_rs_for_input
+        is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
 
         # Configuración de columnas para el st.data_editor
         column_config = {
@@ -452,7 +452,7 @@ elif st.session_state.current_step == 5:
             edited_df_r = edited_dfs[r_key]
             
             # Determine if the 'Nº Evaluados' column for this R is disabled
-            is_num_res_disabled = not all_checked and r_key not in st.session_state.selected_rs_for_input
+            is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
 
             # Handle num_residentes_R
             if is_num_res_disabled:
@@ -496,7 +496,7 @@ elif st.session_state.current_step == 5:
                     # Validation for 'num_residentes'
                     if num_res_value is None: # Now None explicitly means empty or invalid
                         # Only raise error if the field was enabled and meant for user input
-                        is_num_res_disabled = not all_checked and f'R{r_num}' not in st.session_state.selected_rs_for_input
+                        is_num_res_disabled = f'R{r_num}' not in st.session_state.selected_rs_for_input
                         if not is_num_res_disabled: # If it was expected to have a value
                             validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío o no es un número válido.")
                     elif not isinstance(num_res_value, int) or num_res_value < 0: # Ensure it's an int and non-negative
