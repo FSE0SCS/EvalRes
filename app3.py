@@ -329,220 +329,94 @@ elif st.session_state.current_step == 4:
             st.rerun()
 
 # 5º: Zona de trabajo - Introducción de datos (Ahora Paso 5)
+# Paso 4: Introducción de Datos de Residentes (corregido)
 elif st.session_state.current_step == 5:
-    st.header("Paso 4: Introducción de Datos de Residentes")
-    st.write(f"Dirección/Gerencia seleccionada: **{st.session_state.direccion_selected}**")
+st.header("Paso 4: Introducción de Datos de Residentes")
+st.write(f"Dirección/Gerencia seleccionada: **{st.session_state.direccion_selected}**")
 
-    especialidades_para_rellenar = st.session_state.especialidades_para_rellenar
+especialidades_para_rellenar = st.session_state.especialidades_para_rellenar
+if not especialidades_para_rellenar:
+    st.warning("No se encontraron especialidades para la Dirección/Gerencia seleccionada. Por favor, vuelve al paso anterior.")
+    if st.button("Volver al Paso 2"):
+        st.session_state.current_step = 3
+        st.rerun()
+    st.stop()
 
-    if not especialidades_para_rellenar:
-        st.warning("No se encontraron especialidades para la Dirección/Gerencia seleccionada. Por favor, vuelve al paso anterior.")
-        if st.button("Volver al Paso 2"):
-            st.session_state.current_step = 3
-            st.rerun()
-        st.stop()
+# Inicializar estructura si es la primera vez o ha cambiado la dirección
+if 'data_input' not in st.session_state or st.session_state.data_input_direccion != st.session_state.direccion_selected:
+    st.session_state.data_input = {
+        esp: {
+            f'num_residentes_R{i}': 0,
+            f'R{i}': [None, None, None]
+        } for esp in especialidades_para_rellenar for i in range(1, 6)
+    }
+    st.session_state.data_input_direccion = st.session_state.direccion_selected
+    st.session_state.selected_rs_for_input = []
 
-    # Inicializar data_input si la dirección ha cambiado o es la primera vez
-    # Or if especialidades_para_rellenar has changed (e.g., if user went back and selected a different area)
-    if 'data_input' not in st.session_state or \
-       st.session_state.data_input_direccion != st.session_state.direccion_selected or \
-       set(st.session_state.data_input.keys()) != set(especialidades_para_rellenar):
-        
-        # Create a new data_input structure, preserving existing data if specialty exists
-        new_data_input = {}
-        for esp in especialidades_para_rellenar:
-            if esp in st.session_state.data_input:
-                new_data_input[esp] = st.session_state.data_input[esp]
-            else:
-                new_data_input[esp] = {
-                    'num_residentes_R1': None, 'R1': [None, None, None],
-                    'num_residentes_R2': None, 'R2': [None, None, None],
-                    'num_residentes_R3': None, 'R3': [None, None, None],
-                    'num_residentes_R4': None, 'R4': [None, None, None],
-                    'num_residentes_R5': None, 'R5': [None, None, None]
-                }
-        st.session_state.data_input = new_data_input
-        st.session_state.data_input_direccion = st.session_state.direccion_selected
-        st.session_state.selected_rs_for_input = [] # Resetear selecciones al cambiar de dirección
+# Selección de R para edición
+st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
+r_keys = [f"R{i}" for i in range(1, 6)]
+selected_rs = st.multiselect("Seleccione los grupos R:", r_keys, default=st.session_state.selected_rs_for_input)
+st.session_state.selected_rs_for_input = selected_rs
 
-    st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
+st.info("💡 Los R no seleccionados tendrán su 'Nº Finalizados' rellenado con 0 automáticamente.")
 
-    col_r1, col_r2, col_r3, col_r4, col_r5, col_all = st.columns(6)
+# Mostrar tablas por R
+for r_key in r_keys:
+    st.markdown(f"#### Datos para {r_key}")
+    table_data = []
+    for esp in especialidades_para_rellenar:
+        num_res = st.session_state.data_input[esp][f'num_residentes_{r_key}']
+        notas = st.session_state.data_input[esp][r_key]
+        table_data.append({
+            "Especialidad": esp,
+            f"Nº {r_key} Finalizados": num_res if r_key in selected_rs else 0,
+            f"{r_key} Nota 1": notas[0],
+            f"{r_key} Nota 2": notas[1],
+            f"{r_key} Nota 3": notas[2]
+        })
 
-    # Use a unique key for each checkbox, and manage their states directly
-    r1_checked = col_r1.checkbox("R1", value='R1' in st.session_state.selected_rs_for_input, key="r1_checkbox")
-    r2_checked = col_r2.checkbox("R2", value='R2' in st.session_state.selected_rs_for_input, key="r2_checkbox")
-    r3_checked = col_r3.checkbox("R3", value='R3' in st.session_state.selected_rs_for_input, key="r3_checkbox")
-    r4_checked = col_r4.checkbox("R4", value='R4' in st.session_state.selected_rs_for_input, key="r4_checkbox")
-    r5_checked = col_r5.checkbox("R5", value='R5' in st.session_state.selected_rs_for_input, key="r5_checkbox")
+    df = pd.DataFrame(table_data)
 
-    # To prevent infinite reruns, handle 'all_checked' logic carefully.
-    # The `value` parameter for checkboxes should ideally be linked directly to st.session_state
-    # to allow for programmatic control and prevent unintended reruns from just setting the `value`.
-
-    # Let's create a temporary list of current selections based on direct checkbox values
-    temp_selected_rs = []
-    if r1_checked: temp_selected_rs.append('R1')
-    if r2_checked: temp_selected_rs.append('R2')
-    if r3_checked: temp_selected_rs.append('R3')
-    if r4_checked: temp_selected_rs.append('R4')
-    if r5_checked: temp_selected_rs.append('R5')
-
-    # Handle the "Todos" checkbox separately to avoid direct modification of other checkbox states
-    # inside the rendering loop, which can cause issues.
-    # Instead, we define a callback for it.
-
-    def toggle_all_rs():
-        if st.session_state.all_checkbox:
-            st.session_state.selected_rs_for_input = ['R1', 'R2', 'R3', 'R4', 'R5']
-            st.session_state.r1_checkbox = True
-            st.session_state.r2_checkbox = True
-            st.session_state.r3_checkbox = True
-            st.session_state.r4_checkbox = True
-            st.session_state.r5_checkbox = True
-        else:
-            st.session_state.selected_rs_for_input = []
-            st.session_state.r1_checkbox = False
-            st.session_state.r2_checkbox = False
-            st.session_state.r3_checkbox = False
-            st.session_state.r4_checkbox = False
-            st.session_state.r5_checkbox = False
-
-    # Initialize all_checkbox state based on individual checkboxes
-    initial_all_checked_value = (
-        r1_checked and r2_checked and r3_checked and r4_checked and r5_checked and
-        len(temp_selected_rs) == 5 # Ensure no other R's are secretly selected
-    )
-    all_checked = col_all.checkbox("Todos", value=initial_all_checked_value, key="all_checkbox", on_change=toggle_all_rs)
-
-
-    # Update st.session_state.selected_rs_for_input based on individual checkboxes
-    # This must happen after the 'all_checked' logic if 'all_checked' can override individual selections.
-    # If 'all_checked' was just clicked, its on_change callback already handled the state.
-    # Otherwise, individual checkbox changes update the selected_rs_for_input.
-    if not st.session_state.get('all_checkbox_clicked_this_rerun', False): # Prevent double-updating if 'all_checkbox' triggered the rerun
-        current_selected_rs = []
-        if st.session_state.r1_checkbox: current_selected_rs.append('R1')
-        if st.session_state.r2_checkbox: current_selected_rs.append('R2')
-        if st.session_state.r3_checkbox: current_selected_rs.append('R3')
-        if st.session_state.r4_checkbox: current_selected_rs.append('R4')
-        if st.session_state.r5_checkbox: current_selected_rs.append('R5')
-        
-        if set(st.session_state.selected_rs_for_input) != set(current_selected_rs):
-            st.session_state.selected_rs_for_input = current_selected_rs
-            st.rerun() # Rerun to apply changes in disabled states for `Nº Finalizados`
-
-
-    st.info("💡 **Importante:** Para las notas, si no va a rellenar las 3 notas más altas, deje los campos vacíos. No ponga '0', ya que afectaría a la media. Las notas deben estar entre 0 y 10, con hasta 2 decimales.")
-    st.info("Cuando selecciona un R, la tabla de ese R se activa para la edición. Los R no seleccionados tendrán su 'Nº Evaluados' rellenado con 0.")
-
-    # Generar las 5 tablas dinámicamente
-    for r_num in range(1, 6):
-        r_key = f'R{r_num}'
-        
-        # Prepare data for the current R's table using st.session_state.data_input
-        table_data_list = []
-        for esp in especialidades_para_rellenar:
-            num_res = st.session_state.data_input[esp][f'num_residentes_{r_key}']
-            notes = st.session_state.data_input[esp][r_key]
-            
-            # Apply the pre-fill logic if this R is not selected for input
-            is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
-
-            table_data_list.append({
-                "Especialidad": esp,
-                f"Nº {r_key} Finalizados": 0 if is_num_res_disabled else (num_res if pd.notna(num_res) else None),
-                f"{r_key} Nota 1": notes[0],
-                f"{r_key} Nota 2": notes[1],
-                f"{r_key} Nota 3": notes[2]
-            })
-        
-        table_df = pd.DataFrame(table_data_list)
-
-        st.markdown(f"#### Datos para {r_key}")
-        
-        # Configuration of columns for st.data_editor
-        column_config = {
+    edited_df = st.data_editor(
+        df,
+        num_rows="fixed",
+        use_container_width=True,
+        key=f"editor_{r_key}",
+        column_config={
             "Especialidad": st.column_config.Column("Especialidad", disabled=True),
             f"Nº {r_key} Finalizados": st.column_config.NumberColumn(
                 f"Nº {r_key} Finalizados",
-                min_value=0, format="%d", help=f"Número de residentes {r_key} finalizados en esta especialidad.",
-                disabled=is_num_res_disabled # Disable if not selected
+                min_value=0,
+                format="%d",
+                disabled=(r_key not in selected_rs)
             ),
             f"{r_key} Nota 1": st.column_config.NumberColumn(f"{r_key} Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
             f"{r_key} Nota 2": st.column_config.NumberColumn(f"{r_key} Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
             f"{r_key} Nota 3": st.column_config.NumberColumn(f"{r_key} Nota 3", min_value=0.0, max_value=10.0, format="%.2f")
         }
+    )
 
-        # Use a unique key for each data editor
-        edited_df = st.data_editor(
-            table_df,
-            column_config=column_config,
-            num_rows="fixed",
-            use_container_width=True,
-            key=f"data_input_editor_{r_key}"
-        )
+    # Guardar cambios en session_state
+    for i, esp in enumerate(especialidades_para_rellenar):
+        st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(edited_df.iloc[i][f"Nº {r_key} Finalizados"]) if pd.notna(edited_df.iloc[i][f"Nº {r_key} Finalizados"]) else 0
+        st.session_state.data_input[esp][r_key] = [
+            float(edited_df.iloc[i][f"{r_key} Nota 1"]) if pd.notna(edited_df.iloc[i][f"{r_key} Nota 1"]) else None,
+            float(edited_df.iloc[i][f"{r_key} Nota 2"]) if pd.notna(edited_df.iloc[i][f"{r_key} Nota 2"]) else None,
+            float(edited_df.iloc[i][f"{r_key} Nota 3"]) if pd.notna(edited_df.iloc[i][f"{r_key} Nota 3"]) else None
+        ]
 
-        # IMMEDIATELY UPDATE session_state.data_input with the edited values
-        # This is the crucial part to prevent double entry due to reruns.
-        for i, esp in enumerate(especialidades_para_rellenar):
-            # Update num_residentes
-            num_res_val = edited_df.iloc[i][f"Nº {r_key} Finalizados"]
-            try:
-                st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(num_res_val) if pd.notna(num_res_val) and num_res_val != "" else None
-            except ValueError:
-                st.session_state.data_input[esp][f'num_residentes_{r_key}'] = None # Set to None if invalid
+st.markdown("---")
+col_next_step5, col_back_step5 = st.columns(2)
+with col_next_step5:
+    if st.button("SIGUIENTE"):
+        st.session_state.current_step = 6
+        st.rerun()
+with col_back_step5:
+    if st.button("ATRÁS"):
+        st.session_state.current_step = 4
+        st.rerun()
 
-            # Update notes
-            updated_notes = []
-            for j in range(1, 4):
-                note_val = edited_df.iloc[i][f"{r_key} Nota {j}"]
-                try:
-                    updated_notes.append(float(note_val) if pd.notna(note_val) and note_val != "" else None)
-                except ValueError:
-                    updated_notes.append(None) # Set to None if invalid
-            st.session_state.data_input[esp][r_key] = updated_notes
-        
-        st.markdown("---") # Separator between tables
-
-    col_next_step5, col_back_step5 = st.columns(2)
-
-    with col_next_step5:
-        if st.button("SIGUIENTE"):
-            # Validation before moving to the summary
-            validation_errors = []
-            for esp in especialidades_para_rellenar:
-                data = st.session_state.data_input[esp]
-                for r_num in range(1, 6):
-                    num_res_key = f"num_residentes_R{r_num}"
-                    num_res_value = data[num_res_key]
-                    
-                    # Validation for 'num_residentes'
-                    # It's okay to be None if the R group was not selected (and thus auto-filled to 0)
-                    is_num_res_disabled = f'R{r_num}' not in st.session_state.selected_rs_for_input
-                    
-                    if not is_num_res_disabled: # Only validate if it was expected for user input
-                        if num_res_value is None or not isinstance(num_res_value, int) or num_res_value < 0:
-                            validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío, no es un número válido o es negativo.")
-
-                    # Validate notes (between 0 and 10, up to 2 decimals)
-                    for k, note in enumerate(data[f'R{r_num}']):
-                        if note is not None:
-                            if not isinstance(note, float) or not (0 <= note <= 10):
-                                validation_errors.append(f"En '{esp}', Nota {k+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
-            
-            if validation_errors:
-                for error in validation_errors:
-                    st.error(error)
-                st.warning("Por favor, corrige los errores para poder continuar.")
-            else:
-                st.session_state.current_step = 6
-                st.rerun()
-
-    with col_back_step5:
-        if st.button("ATRÁS", key="back_from_step5"):
-            st.session_state.current_step = 4
-            st.rerun()
 
 # 6º: Resumen datos introducidos
 elif st.session_state.current_step == 6:
