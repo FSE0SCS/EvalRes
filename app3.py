@@ -403,7 +403,7 @@ elif st.session_state.current_step == 5:
             notes = st.session_state.data_input[esp][r_key]
 
             # Aplicar la lógica de pre-relleno si 'Todos' no está marcado y este R no está seleccionado
-            if not all_checked and r_key not in st.session_state.selected_rs_for_input:
+            if r_key not in st.session_state.selected_rs_for_input:
                 num_res = 0 # Rellenar con 0 si no está seleccionado y no es 'Todos'
             
             table_data_list.append({
