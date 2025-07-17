@@ -359,57 +359,34 @@ elif st.session_state.current_step == 5:
 
     st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
-    col_r1, col_r2, col_r3, col_r4, col_r5, col_all = st.columns(6)
+    # Estados iniciales
+    if 'rs_checkbox_states' not in st.session_state:
+        st.session_state.rs_checkbox_states = {'R1': False, 'R2': False, 'R3': False, 'R4': False, 'R5': False, 'Todos': False}
 
-    with col_r1:
-        r1_checked = st.checkbox("R1", key="r1_checkbox")
-    with col_r2:
-        r2_checked = st.checkbox("R2", key="r2_checkbox")
-    with col_r3:
-        r3_checked = st.checkbox("R3", key="r3_checkbox")
-    with col_r4:
-        r4_checked = st.checkbox("R4", key="r4_checkbox")
-    with col_r5:
-        r5_checked = st.checkbox("R5", key="r5_checkbox")
-    with col_all:
-        all_checked = st.checkbox("Todos", key="all_checkbox")
+    cols = st.columns(6)
+    r_labels = ['R1', 'R2', 'R3', 'R4', 'R5', 'Todos']
 
-    current_selected_rs = []
-    if r1_checked:
-        current_selected_rs.append('R1')
-    if r2_checked:
-        current_selected_rs.append('R2')
-    if r3_checked:
-        current_selected_rs.append('R3')
-    if r4_checked:
-        current_selected_rs.append('R4')
-    if r5_checked:
-        current_selected_rs.append('R5')
+    # Renderizar checkboxes sin provocar rerun
+    for idx, r_label in enumerate(r_labels):
+        current_value = st.session_state.rs_checkbox_states[r_label]
+        new_value = cols[idx].checkbox(r_label, value=current_value, key=f"{r_label}_checkbox_no_rerun")
+        st.session_state.rs_checkbox_states[r_label] = new_value
 
-    # Lógica para manejar "Todos"
-    if all_checked:
-        current_selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
-        # Desmarcar las individuales si "Todos" está marcado
-        if not r1_checked: st.session_state.r1_checkbox = True
-        if not r2_checked: st.session_state.r2_checkbox = True
-        if not r3_checked: st.session_state.r3_checkbox = True
-        if not r4_checked: st.session_state.r4_checkbox = True
-        if not r5_checked: st.session_state.r5_checkbox = True
-    elif not all_checked and 'all_checkbox' in st.session_state and st.session_state.all_checkbox:
-        # Si "Todos" estaba marcado y ahora se desmarca, desmarcar individuales
-        st.session_state.r1_checkbox = False
-        st.session_state.r2_checkbox = False
-        st.session_state.r3_checkbox = False
-        st.session_state.r4_checkbox = False
-        st.session_state.r5_checkbox = False
-        current_selected_rs = [] # Para limpiar las selecciones individuales
+    # Lógica de sincronización
+    selected_rs = [r for r in ['R1', 'R2', 'R3', 'R4', 'R5'] if st.session_state.rs_checkbox_states[r]]
 
-    # Sincronizar el estado de sesión con las selecciones actuales
-    if st.session_state.selected_rs_for_input != current_selected_rs:
-        st.session_state.selected_rs_for_input = current_selected_rs
-        # Forzar un rerun si la selección ha cambiado para aplicar el pre-relleno
-        st.rerun()
+    if st.session_state.rs_checkbox_states['Todos']:
+        selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
+    else:
+        if len(selected_rs) == 5:
+            st.session_state.rs_checkbox_states['Todos'] = True
+        else:
+            st.session_state.rs_checkbox_states['Todos'] = False
 
+    # Guardar R seleccionados
+    st.session_state.selected_rs_for_input = selected_rs
+
+    st.info("💡 Solo se activan los campos de los R seleccionados. Los demás se rellenan con 0 automáticamente.")
     st.info("💡 **Importante:** Para las notas, si no va a rellenar las 3 notas más altas, deje los campos vacíos. No ponga '0', ya que afectaría a la media. Las notas deben estar entre 0 y 10, con hasta 2 decimales.")
     st.info("Cuando selecciona un R, la tabla de ese R se activa para la edición. Los R no seleccionados tendrán su 'Nº Evaluados' rellenado con 0.")
 
