@@ -169,6 +169,9 @@ def reset_selection_page():
     st.session_state.direccion_selected = None
     st.session_state.confirm_selection = False
     st.session_state.info_understood = False
+    # Limpiar también las tablas persistentes
+    if 'tabla_data_frames' in st.session_state:
+        st.session_state.tabla_data_frames = {}
 
 def login_successful():
     """Marca la sesión como logueada."""
@@ -237,6 +240,8 @@ if 'especialidades_para_rellenar' not in st.session_state:
     st.session_state.especialidades_para_rellenar = []
 if 'selected_rs_for_input' not in st.session_state:
     st.session_state.selected_rs_for_input = []
+if 'tabla_data_frames' not in st.session_state:
+    st.session_state.tabla_data_frames = {}
 
 # --- Interfaz de Usuario y Flujo del Programa ---
 
@@ -406,130 +411,132 @@ elif st.session_state.current_step == 5:
         st.session_state.data_input_direccion = st.session_state.direccion_selected
         st.session_state.selected_rs_for_input = []
 
+    # Inicializar tabla_data_frames si no existe - CLAVE PARA PERSISTIR DATOS
+    if 'tabla_data_frames' not in st.session_state:
+        st.session_state.tabla_data_frames = {}
+        for r_num in range(1, 6):
+            r_key = f'R{r_num}'
+            table_data_list = []
+            for esp in especialidades_para_rellenar:
+                table_data_list.append({
+                    "Especialidad": esp,
+                    f"Nº {r_key} Evaluados": None,
+                    f"{r_key} Nota 1": None,
+                    f"{r_key} Nota 2": None,
+                    f"{r_key} Nota 3": None
+                })
+            st.session_state.tabla_data_frames[r_key] = pd.DataFrame(table_data_list)
+
     st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
-    # CORRECCIÓN PRINCIPAL: Manejo simplificado de checkboxes sin modificar el estado constantemente
-    cols = st.columns(6)
-    r_labels = ['R1', 'R2', 'R3', 'R4', 'R5', 'Todos']
+    # SOLUCIÓN: Usar un contenedor para los checkboxes que no afecte las tablas
+    with st.container():
+        cols = st.columns(6)
+        r_labels = ['R1', 'R2', 'R3', 'R4', 'R5', 'Todos']
 
-    # Inicializar estados de checkbox solo si no existen
-    checkbox_keys = {
-        'R1': 'r1_checkbox_key',
-        'R2': 'r2_checkbox_key', 
-        'R3': 'r3_checkbox_key',
-        'R4': 'r4_checkbox_key',
-        'R5': 'r5_checkbox_key',
-        'Todos': 'todos_checkbox_key'
-    }
+        # Obtener estados actuales de los checkboxes
+        current_checkbox_states = {}
+        for idx, r_label in enumerate(r_labels):
+            current_checkbox_states[r_label] = cols[idx].checkbox(
+                r_label, 
+                key=f"checkbox_{r_label}_v2"  # Key única para evitar conflictos
+            )
 
-    # Obtener estados actuales de los checkboxes directamente
-    current_checkbox_states = {}
-    for idx, r_label in enumerate(r_labels):
-        current_checkbox_states[r_label] = cols[idx].checkbox(
-            r_label, 
-            key=checkbox_keys[r_label]
-        )
+        # Lógica para determinar qué Rs están seleccionados
+        if current_checkbox_states['Todos']:
+            selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
+        else:
+            selected_rs = [r for r in ['R1', 'R2', 'R3', 'R4', 'R5'] if current_checkbox_states[r]]
 
-    # Lógica para determinar qué Rs están seleccionados
-    if current_checkbox_states['Todos']:
-        selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
-    else:
-        selected_rs = [r for r in ['R1', 'R2', 'R3', 'R4', 'R5'] if current_checkbox_states[r]]
-
-    st.session_state.selected_rs_for_input = selected_rs
+        st.session_state.selected_rs_for_input = selected_rs
 
     st.info("💡 Solo se activan los campos de los R seleccionados. Los demás se rellenan con 0 automáticamente.")
     st.info("💡 **Importante:** Para las notas, si no va a rellenar las 3 notas más altas, deje los campos vacíos. No ponga '0', ya que afectaría a la media. Las notas deben estar entre 0 y 10, con hasta 2 decimales.")
     st.info("Cuando selecciona un R, la tabla de ese R se activa para la edición. Los R no seleccionados tendrán su 'Nº Evaluados' rellenado con 0.")
 
-    # Generar las 5 tablas dinámicamente
-    edited_dfs = {} # Diccionario para almacenar los DataFrames editados por R
-
+    # SOLUCIÓN: Generar las 5 tablas con persistencia de datos
     for r_num in range(1, 6):
         r_key = f'R{r_num}'
         
-        # Preparar datos para la tabla actual de R
-        table_data_list = []
-        for esp in especialidades_para_rellenar:
-            num_res = st.session_state.data_input[esp][f'num_residentes_{r_key}']
-            notes = st.session_state.data_input[esp][r_key]
-
-            # Aplicar la lógica de pre-relleno si este R no está seleccionado
-            if r_key not in st.session_state.selected_rs_for_input:
-                num_res = 0 # Rellenar con 0 si no está seleccionado
-            
-            table_data_list.append({
-                "Especialidad": esp,
-                f"Nº {r_key} Evaluados": num_res,
-                f"{r_key} Nota 1": notes[0],
-                f"{r_key} Nota 2": notes[1],
-                f"{r_key} Nota 3": notes[2]
-            })
-        
-        table_df = pd.DataFrame(table_data_list)
-
         st.markdown(f"#### Datos para {r_key}")
         
-        # Determinar si la columna de Nº Evaluados debe estar deshabilitada
-        is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
-
-        # Configuración de columnas para el st.data_editor
+        # Determinar si esta tabla debe estar habilitada
+        is_r_enabled = r_key in st.session_state.selected_rs_for_input
+        
+        # Actualizar datos de pre-relleno basado en selección actual
+        for i, esp in enumerate(especialidades_para_rellenar):
+            if not is_r_enabled:
+                # Si no está habilitado, poner 0 en número de evaluados
+                st.session_state.tabla_data_frames[r_key].iloc[i, st.session_state.tabla_data_frames[r_key].columns.get_loc(f"Nº {r_key} Evaluados")] = 0
+        
+        # Configuración de columnas
         column_config = {
             "Especialidad": st.column_config.Column("Especialidad", disabled=True),
             f"Nº {r_key} Evaluados": st.column_config.NumberColumn(
                 f"Nº {r_key} Evaluados",
-                min_value=0, format="%d", help=f"Número de residentes {r_key} evaluados en esta especialidad.",
-                disabled=is_num_res_disabled # Deshabilitar si no está seleccionado
+                min_value=0, format="%d", 
+                help=f"Número de residentes {r_key} evaluados en esta especialidad.",
+                disabled=not is_r_enabled
             ),
-            f"{r_key} Nota 1": st.column_config.NumberColumn(f"{r_key} Nota 1", min_value=0.0, max_value=10.0, format="%.2f"),
-            f"{r_key} Nota 2": st.column_config.NumberColumn(f"{r_key} Nota 2", min_value=0.0, max_value=10.0, format="%.2f"),
-            f"{r_key} Nota 3": st.column_config.NumberColumn(f"{r_key} Nota 3", min_value=0.0, max_value=10.0, format="%.2f")
+            f"{r_key} Nota 1": st.column_config.NumberColumn(
+                f"{r_key} Nota 1", 
+                min_value=0.0, max_value=10.0, format="%.2f",
+                disabled=not is_r_enabled
+            ),
+            f"{r_key} Nota 2": st.column_config.NumberColumn(
+                f"{r_key} Nota 2", 
+                min_value=0.0, max_value=10.0, format="%.2f",
+                disabled=not is_r_enabled
+            ),
+            f"{r_key} Nota 3": st.column_config.NumberColumn(
+                f"{r_key} Nota 3", 
+                min_value=0.0, max_value=10.0, format="%.2f",
+                disabled=not is_r_enabled
+            )
         }
 
+        # Editor de datos con persistencia
         edited_df = st.data_editor(
-            table_df,
+            st.session_state.tabla_data_frames[r_key],
             column_config=column_config,
             num_rows="fixed",
             use_container_width=True,
-            key=f"data_input_editor_{r_key}"
+            key=f"persistent_editor_{r_key}",
+            hide_index=True
         )
-        edited_dfs[r_key] = edited_df
+        
+        # Actualizar el DataFrame persistente
+        st.session_state.tabla_data_frames[r_key] = edited_df.copy()
 
-        st.markdown("---") # Separador entre tablas
+        st.markdown("---")
 
-    # Actualizar st.session_state.data_input con los valores editados de todas las tablas
+    # Actualizar st.session_state.data_input desde las tablas persistentes
     for i, esp in enumerate(especialidades_para_rellenar):
         for r_num in range(1, 6):
             r_key = f'R{r_num}'
-            edited_df_r = edited_dfs[r_key]
+            is_r_enabled = r_key in st.session_state.selected_rs_for_input
             
-            # Determine if the 'Nº Evaluados' column for this R is disabled
-            is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
-
-            # Handle num_residentes_R
-            if is_num_res_disabled:
-                # If disabled, it should be 0, regardless of what data_editor might return
+            # Obtener datos de la tabla persistente
+            df = st.session_state.tabla_data_frames[r_key]
+            
+            # Actualizar número de residentes
+            if not is_r_enabled:
                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
             else:
-                # If enabled, get the value from the edited DataFrame
-                num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Evaluados"]
-                # Try converting to int, handle potential None/NaN/empty string from user input
+                num_res_val = df.iloc[i][f"Nº {r_key} Evaluados"]
                 try:
-                    # Convert to int only if not None/NaN, otherwise keep as None for validation to catch
                     st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(num_res_val) if pd.notna(num_res_val) and num_res_val != "" else None
-                except ValueError:
-                    # If conversion fails, set to None to be caught by validation
+                except (ValueError, TypeError):
                     st.session_state.data_input[esp][f'num_residentes_{r_key}'] = None
 
-            # Recuperar las notas de la tabla editada
+            # Actualizar notas
             updated_notes = []
-            for j in range(1, 4): # For Nota 1, Nota 2, Nota 3
-                note_val = edited_df_r.iloc[i][f"{r_key} Nota {j}"]
+            for j in range(1, 4):
+                note_val = df.iloc[i][f"{r_key} Nota {j}"]
                 try:
-                    # Convert to float only if not None/NaN, otherwise keep as None for validation to catch
                     updated_notes.append(float(note_val) if pd.notna(note_val) and note_val != "" else None)
-                except ValueError:
-                    updated_notes.append(None) # If conversion fails, set to None
+                except (ValueError, TypeError):
+                    updated_notes.append(None)
             st.session_state.data_input[esp][r_key] = updated_notes
             
 
