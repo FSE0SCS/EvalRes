@@ -35,7 +35,16 @@ CODIGOS_DIRECCION = {
     "GERENCIA DE ATENCIÓN PRIMARIA DE TENERIFE SUR": "GAPTF_Sur",
     "GERENCIA DE SERVICIOS SANITARIOS DE FUERTEVENTURA": "GSSFV",
     "GERENCIA DE SERVICIOS SANITARIOS DE LANZAROTE": "GSSLZ",
-    "GERENCIA DE SERVICIOS SANITARIOS DE LA PALMA": "GSSLP"
+    "GERENCIA DE SERVICIOS SANITARIOS DE LA PALMA": "GSSLP",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD MENTAL DE GRAN CANARIA": "UDM_SM_GC",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUF MENTAL DE TENERIFE": "UDM_SM_TF",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD LABORAL": "UDM_SL",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE OBSTETRICIA Y GINECOLOGIA DEL CHUIMI": "UDM_OG_CHUIMI",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL CHUIMI": "UDM_Ped_CHUIMI",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL HUNSC": "UDM_Ped_HUNSC",
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL HUC": "UDM_Ped_HUC",
+    "UNIDAD DOCENTE DE ENFERMERIA OBSTETRICA-GINECOLOGICA DE TENERIFE": "UD_EnfOG_TF",
+    "UNIDAD DOCENTE DE MEDICINA PREVENTIVA Y SALUD PUBLICA": "UD_MPySP"
 }
 
 # Especialidades por Dirección/Gerencia
@@ -46,7 +55,7 @@ ESPECIALIDADES_POR_DIRECCION = {
         "CIRUGÍA CARDIOVASCULAR", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO",
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "CIRUGÍA PLÁSTICA ESTÉTICA Y REPARADORA",
         "CIRUGÍA TORÁCICA", "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA",
-        "ENDOCRINOLOGÍA Y NUTRICIÓN", "ENFERMERÍA DEL TRABAJO", "FARMACIA HOSPITALARIA",
+        "ENDOCRINOLOGÍA Y NUTRICIÓN", "FARMACIA HOSPITALARIA",
         "HEMATOLOGÍA Y HEMOTERAPIA", "INMUNOLOGÍA", "MEDICINA FÍSICA Y REHABILITACIÓN",
         "MEDICINA INTENSIVA", "MEDICINA INTERNA", "MICROBIOLOGÍA Y PARASITOLOGÍA",
         "NEFROLOGÍA", "NEUMOLOGÍA", "NEUROCIRUGÍA", "NEUROFISIOLOGÍA CLÍNICA", "NEUROLOGÍA",
@@ -57,8 +66,8 @@ ESPECIALIDADES_POR_DIRECCION = {
         "ANATOMÍA PATOLÓGICA", "ANESTESIOLOGÍA Y REANIMACIÓN", "ANGIOLOGÍA Y CIRUGÍA VASCULAR",
         "APARATO DIGESTIVO", "BIOQUÍMICA CLÍNICA", "CARDIOLOGÍA", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO",
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "CIRUGÍA PEDIÁTRICA",
-        "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA", "ENDOCRINOLOGÍA Y NUTRICIÓN",
-        "ENFERMERÍA DEL TRABAJO", "ENFERMERÍA OBSTÉTRICO GINECOLOGICA", "ENFERMERÍA PEDIATRICA",
+        "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA", "ENDOCRINOLOGÍA Y NUTRICIÓN", 
+        "ENFERMERÍA PEDIATRICA",
         "FARMACIA HOSPITALARIA", "HEMATOLOGÍA Y HEMOTERAPIA", "MEDICINA FÍSICA Y REHABILITACIÓN",
         "MEDICINA INTENSIVA", "MEDICINA INTERNA", "MEDICINA NUCLEAR",
         "MICROBIOLOGÍA Y PARASITOLOGÍA", "NEFROLOGÍA", "NEUMOLOGÍA", "NEUROCIRUGÍA",
@@ -70,8 +79,8 @@ ESPECIALIDADES_POR_DIRECCION = {
         "APARATO DIGESTIVO", "BIOQUÍMICA CLÍNICA", "CARDIOLOGÍA", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO",
         "CIRUGÍA ORAL Y MAXILOFACIAL", "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA",
         "CIRUGÍA PLÁSTICA ESTÉTICA Y REPARADORA", "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA",
-        "ENDOCRINOLOGÍA Y NUTRICIÓN", "ENFERMERÍA DE SALUD MENTAL", "ENFERMERÍA DEL TRABAJO",
-        "ENFERMERÍA OBSTÉTRICO GINECOLOGICA", "ENFERMERÍA PEDIATRICA", "FARMACIA HOSPITALARIA",
+        "ENDOCRINOLOGÍA Y NUTRICIÓN", "ENFERMERÍA DE SALUD MENTAL",
+        "ENFERMERÍA PEDIATRICA", "FARMACIA HOSPITALARIA",
         "FARMACOLOGÍA CLÍNICA", "HEMATOLOGÍA Y HEMOTERAPIA", "MEDICINA FÍSICA Y REHABILITACIÓN",
         "MEDICINA INTENSIVA", "MEDICINA INTERNA", "MEDICINA NUCLEAR",
         "MICROBIOLOGÍA Y PARASITOLOGÍA", "NEFROLOGÍA", "NEUMOLOGÍA", "NEUROCIRUGÍA", "NEUROLOGÍA",
@@ -83,7 +92,7 @@ ESPECIALIDADES_POR_DIRECCION = {
         "ALERGOLOGÍA", "ANÁLISIS CLÍNICOS", "ANESTESIOLOGÍA Y REANIMACIÓN", "APARATO DIGESTIVO",
         "CARDIOLOGÍA", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO", "CIRUGÍA ORAL Y MAXILOFACIAL",
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA",
-        "ENDOCRINOLOGÍA Y NUTRICIÓN", "ENFERMERÍA DEL TRABAJO", "ENFERMERÍA OBSTÉTRICO GINECOLOGICA",
+        "ENDOCRINOLOGÍA Y NUTRICIÓN",
         "ENFERMERÍA PEDIATRICA", "FARMACIA HOSPITALARIA", "HEMATOLOGÍA Y HEMOTERAPIA",
         "MEDICINA FÍSICA Y REHABILITACIÓN", "MEDICINA INTENSIVA", "MEDICINA INTERNA",
         "MEDICINA NUCLEAR", "MICROBIOLOGÍA Y PARASITOLOGÍA", "NEFROLOGÍA", "NEUMOLOGÍA",
@@ -106,12 +115,39 @@ ESPECIALIDADES_POR_DIRECCION = {
     ],
     "GERENCIA DE SERVICIOS SANITARIOS DE LANZAROTE": [
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "ENFERMERÍA FAMILIAR Y COMUNITARIA",
-        "ENFERMERIA GERIATRICA", "ENFERMERÍA OBSTÉTRICO GINECOLOGICA",
+        "ENFERMERIA GERIATRICA",
         "ENFERMERÍA PEDIATRICA", "GERIATRIA", "MEDICINA FAMILIAR Y COMUNITARIA",
-        "MEDICINA INTERNA", "PEDIATRIA Y AREAS ESPECIFICAS"
+        "MEDICINA INTERNA", "PEDIATRIA Y SUS AREAS ESPECIFICAS"
     ],
     "GERENCIA DE SERVICIOS SANITARIOS DE LA PALMA": [
         "MEDICINA FAMILIAR Y COMUNITARIA", "ENFERMERÍA FAMILIAR Y COMUNITARIA"
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD MENTAL DE GRAN CANARIA": [
+        "ENFERMERÍA DE SALUD MENTAL", "PSICOLOGIA CLINICA", "PSIQUIATRIA", "PSIQUIATRIA DE LA INFANCIA Y ADOLESCENCIA"
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUF MENTAL DE TENERIFE": [
+        "ENFERMERÍA DE SALUD MENTAL", "PSICOLOGIA CLINICA", "PSIQUIATRIA", "PSIQUIATRIA DE LA INFANCIA Y ADOLESCENCIA"
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD LABORAL": [
+        "ENFERMERÍA DEL TRABAJO", "MEDICINA DEL TRABAJO"                 
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE OBSTETRICIA Y GINECOLOGIA DEL CHUIMI": [
+        "ENFERMERÍA OBSTÉTRICO GINECOLOGICA", "OBSTETRICIA Y GINECOLOGÍA"
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL CHUIMI": [
+        "ENFERMERIA PEDIATRICA", "PEDIATRIA Y SUS AREAS ESPECIFICAS"
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL HUNSC": [
+        "ENFERMERIA PEDIATRICA", "PEDIATRIA Y SUS AREAS ESPECIFICAS"
+    ],
+    "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL HUC": [
+        "ENFERMERIA PEDIATRICA", "PEDIATRIA Y SUS AREAS ESPECIFICAS"
+    ],
+    "UNIDAD DOCENTE DE ENFERMERIA OBSTETRICA-GINECOLOGICA DE TENERIFE": [
+        "ENFERMERÍA OBSTÉTRICO GINECOLOGICA"
+    ],
+    "UNIDAD DOCENTE DE MEDICINA PREVENTIVA Y SALUD PUBLICA": [
+        "MEDICINA PREVENTIVA Y SALUD PUBLICA"
     ]
 }
 
@@ -241,7 +277,7 @@ elif st.session_state.current_step == 2:
     st.markdown("""
     **Bienvenidos al programa para calcular las medias de los residentes**
 
-    * Debe seleccionar su **ÁREA** de operación y su **DIRECCIÓN/GERENCIA** para obtener acceso a las especialidades evaluadas.
+    * Debe seleccionar su **ÁREA** de operación y su **DIRECCIÓN/GERENCIA/UNIDAD DOCENTE** para obtener acceso a las especialidades evaluadas.
     * Debe rellenar el **número de residentes evaluados** en el ejercicio en curso, para todas las especialidades y año de residencia.
     * Debe rellenar las notas de los residentes. Los valores aceptados no pueden ser superiores a **10** y pueden contener **2 decimales**.
     * Si no rellena las 3 notas más altas de alguna especialidad, **NO debe poner un 0** en la casilla vacía, simplemente no introduzca ningún valor numérico.
@@ -257,11 +293,11 @@ elif st.session_state.current_step == 2:
         else:
             st.warning("Debe marcar la casilla 'He comprendido las normas del programa' para continuar.")
 
-# 3º: Selección de Área y Dirección/Gerencia (Ahora Paso 3)
+# 3º: Selección de Área y Dirección/Gerencia/Unidad Docente (Ahora Paso 3)
 elif st.session_state.current_step == 3:
-    st.header("Paso 2: Selección de Área y Dirección/Gerencia")
+    st.header("Paso 2: Selección de Área y Dirección/Gerencia/Unidad Docente")
 
-    area_options = ["HOSPITALARIA", "PRIMARIA"]
+    area_options = ["HOSPITALARIA", "PRIMARIA", "UNIDAD DOCENTE"]
     st.session_state.area_selected = st.selectbox(
         "**SELECCIONE ÁREA**",
         options=[""] + area_options,
@@ -286,9 +322,21 @@ elif st.session_state.current_step == 3:
             "GERENCIA DE SERVICIOS SANITARIOS DE LANZAROTE",
             "GERENCIA DE SERVICIOS SANITARIOS DE LA PALMA"
         ]
+    elif st.session_state.area_selected == "UNIDAD DOCENTE":
+        direccion_options = [
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD MENTAL DE GRAN CANARIA",
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUF MENTAL DE TENERIFE",
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD LABORAL",
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE OBSTETRICIA Y GINECOLOGIA DEL CHUIMI",
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL CHUIMI",
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL HUNSC",
+            "UNIDAD DOCENTE MULTIPROFESIONAL DE PEDIATRIA DEL HUC",
+            "UNIDAD DOCENTE DE ENFERMERIA OBSTETRICA-GINECOLOGICA DE TENERIFE",
+            "UNIDAD DOCENTE DE MEDICINA PREVENTIVA Y SALUD PUBLICA"
+        ]
 
     st.session_state.direccion_selected = st.selectbox(
-        "**SELECCIONE DIRECCIÓN / GERENCIA**",
+        "**SELECCIONE DIRECCIÓN / GERENCIA / UNIDAD DOCENTE**",
         options=[""] + direccion_options,
         index=direccion_options.index(st.session_state.direccion_selected) + 1 if st.session_state.direccion_selected and st.session_state.direccion_selected in direccion_options else 0,
         key="direccion_selector"
@@ -312,7 +360,7 @@ elif st.session_state.current_step == 3:
 elif st.session_state.current_step == 4:
     st.header("Paso 3: Confirmación de Datos")
     st.markdown(f"**AREA :** <span style='color: #28a745;'>{st.session_state.area_selected}</span>", unsafe_allow_html=True)
-    st.markdown(f"**DIRECCION/GERENCIA :** <span style='color: #007bff;'>{st.session_state.direccion_selected}</span>", unsafe_allow_html=True)
+    st.markdown(f"**DIRECCION/GERENCIA/UNIDAD DOCENTE :** <span style='color: #007bff;'>{st.session_state.direccion_selected}</span>", unsafe_allow_html=True)
     st.markdown("**¿Desea confirmar estos datos?**")
 
     col_si, col_atras = st.columns(2)
@@ -331,12 +379,12 @@ elif st.session_state.current_step == 4:
 # 5º: Zona de trabajo - Introducción de datos (Ahora Paso 5)
 elif st.session_state.current_step == 5:
     st.header("Paso 4: Introducción de Datos de Residentes")
-    st.write(f"Dirección/Gerencia seleccionada: **{st.session_state.direccion_selected}**")
+    st.write(f"Dirección/Gerencia/Unidad Docente seleccionada: **{st.session_state.direccion_selected}**")
 
     especialidades_para_rellenar = st.session_state.especialidades_para_rellenar # <--- MODIFICA ESTA LÍNEA
 
     if not especialidades_para_rellenar:
-        st.warning("No se encontraron especialidades para la Dirección/Gerencia seleccionada. Por favor, vuelve al paso anterior.")
+        st.warning("No se encontraron especialidades para la Dirección/Gerencia/Unidad Docente seleccionada. Por favor, vuelve al paso anterior.")
         if st.button("Volver al Paso 2"):
             st.session_state.current_step = 3
             st.rerun()
