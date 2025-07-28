@@ -233,9 +233,9 @@ if 'total_residentes_r' not in st.session_state:
     st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
 if 'note_entry_summary' not in st.session_state:
     st.session_state.note_entry_summary = pd.DataFrame()
-if 'especialidades_para_rellenar' not in st.session_state: # <--- AÑADE ESTA LÍNEA
-    st.session_state.especialidades_para_rellenar = []      # <--- AÑADE ESTA LÍNEA
-if 'selected_rs_for_input' not in st.session_state: # Nuevo estado para las casillas de R
+if 'especialidades_para_rellenar' not in st.session_state:
+    st.session_state.especialidades_para_rellenar = []
+if 'selected_rs_for_input' not in st.session_state:
     st.session_state.selected_rs_for_input = []
 
 # --- Interfaz de Usuario y Flujo del Programa ---
@@ -256,11 +256,12 @@ if not st.session_state.logged_in:
     st.markdown("- **Versión 1.0 (2025-07-11):** Implementación inicial del flujo de trabajo completo, control de acceso y generación de Excel.")
     st.markdown("- **Versión 1.1 (2025-07-13):** Añadida pantalla de información y normas, reestructuración de la entrada de datos por R, resumen de datos introducidos, y preparación para envío de correo con MailGun.")
     st.markdown("- **Versión 1.2 (2025-07-14):** Mejora de la interfaz de entrada de notas, dividiendo la tabla en 5 sub-tablas por R y añadiendo selectores para pre-rellenar con '0'.")
+    st.markdown("- **Versión 1.3 (2025-07-28):** Corrección del problema de doble entrada de datos en las tablas.")
     st.stop()
 
 
 # Flujo principal de la aplicación
-st.title("Evaluación de Notas de Residentes 1.2 – F.S.E. – S.C.S. 🏥")
+st.title("Evaluación de Notas de Residentes 1.3 – F.S.E. – S.C.S. 🏥")
 st.markdown("---")
 
 # 1º: Pantalla de bienvenida
@@ -281,7 +282,7 @@ elif st.session_state.current_step == 2:
     * Debe rellenar el **número de residentes evaluados** en el ejercicio en curso, para todas las especialidades y año de residencia.
     * Debe rellenar las notas de los residentes. Los valores aceptados no pueden ser superiores a **10** y pueden contener **2 decimales**.
     * Si no rellena las 3 notas más altas de alguna especialidad, **NO debe poner un 0** en la casilla vacía, simplemente no introduzca ningún valor numérico.
-    * <span style='color: red;'>**Importante:** Para la introducción de las notas es posible que tenga que hacerlo dos veces por cada celda, **NO es un error**, es un proceso de validación del programa. Disculpe las molestias.</span>
+    * ~~<span style='color: red;'>**Importante:** Para la introducción de las notas es posible que tenga que hacerlo dos veces por cada celda, **NO es un error**, es un proceso de validación del programa. Disculpe las molestias.</span>~~ **CORREGIDO EN VERSIÓN 1.3**
     """, unsafe_allow_html=True)
 
     st.session_state.info_understood = st.checkbox("He comprendido las normas del programa")
@@ -369,7 +370,7 @@ elif st.session_state.current_step == 4:
             st.session_state.current_step = 5
             st.session_state.confirm_selection = True
             # Almacenar especialidades_para_rellenar en session_state aquí
-            st.session_state.especialidades_para_rellenar = ESPECIALIDADES_POR_DIRECCION.get(st.session_state.direccion_selected, []) # <--- AÑADE ESTA LÍNEA
+            st.session_state.especialidades_para_rellenar = ESPECIALIDADES_POR_DIRECCION.get(st.session_state.direccion_selected, [])
             st.rerun()
     with col_atras:
         if st.button("ATRÁS", key="confirm_atras"):
@@ -381,7 +382,7 @@ elif st.session_state.current_step == 5:
     st.header("Paso 4: Introducción de Datos de Residentes")
     st.write(f"Dirección/Gerencia/Unidad Docente seleccionada: **{st.session_state.direccion_selected}**")
 
-    especialidades_para_rellenar = st.session_state.especialidades_para_rellenar # <--- MODIFICA ESTA LÍNEA
+    especialidades_para_rellenar = st.session_state.especialidades_para_rellenar
 
     if not especialidades_para_rellenar:
         st.warning("No se encontraron especialidades para la Dirección/Gerencia/Unidad Docente seleccionada. Por favor, vuelve al paso anterior.")
@@ -403,34 +404,37 @@ elif st.session_state.current_step == 5:
             for esp in especialidades_para_rellenar
         }
         st.session_state.data_input_direccion = st.session_state.direccion_selected
-        st.session_state.selected_rs_for_input = [] # Resetear selecciones al cambiar de dirección
+        st.session_state.selected_rs_for_input = []
 
     st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
-    if 'rs_checkbox_states' not in st.session_state:
-        st.session_state.rs_checkbox_states = {'R1': False, 'R2': False, 'R3': False, 'R4': False, 'R5': False, 'Todos': False}
-
+    # CORRECCIÓN PRINCIPAL: Manejo simplificado de checkboxes sin modificar el estado constantemente
     cols = st.columns(6)
     r_labels = ['R1', 'R2', 'R3', 'R4', 'R5', 'Todos']
 
-    # Mostrar los checkboxes sin rerun
+    # Inicializar estados de checkbox solo si no existen
+    checkbox_keys = {
+        'R1': 'r1_checkbox_key',
+        'R2': 'r2_checkbox_key', 
+        'R3': 'r3_checkbox_key',
+        'R4': 'r4_checkbox_key',
+        'R5': 'r5_checkbox_key',
+        'Todos': 'todos_checkbox_key'
+    }
+
+    # Obtener estados actuales de los checkboxes directamente
+    current_checkbox_states = {}
     for idx, r_label in enumerate(r_labels):
-        current_value = st.session_state.rs_checkbox_states[r_label]
-        st.session_state.rs_checkbox_states[r_label] = cols[idx].checkbox(r_label, value=current_value, key=f"{r_label}_checkbox")
+        current_checkbox_states[r_label] = cols[idx].checkbox(
+            r_label, 
+            key=checkbox_keys[r_label]
+        )
 
     # Lógica para determinar qué Rs están seleccionados
-    selected_rs = [r for r in ['R1', 'R2', 'R3', 'R4', 'R5'] if st.session_state.rs_checkbox_states[r]]
-
-    # Sincronización de "Todos"
-    if st.session_state.rs_checkbox_states['Todos']:
+    if current_checkbox_states['Todos']:
         selected_rs = ['R1', 'R2', 'R3', 'R4', 'R5']
-        for r in ['R1', 'R2', 'R3', 'R4', 'R5']:
-            st.session_state.rs_checkbox_states[r] = True
     else:
-        if len(selected_rs) == 5:
-            st.session_state.rs_checkbox_states['Todos'] = True
-        else:
-            st.session_state.rs_checkbox_states['Todos'] = False
+        selected_rs = [r for r in ['R1', 'R2', 'R3', 'R4', 'R5'] if current_checkbox_states[r]]
 
     st.session_state.selected_rs_for_input = selected_rs
 
@@ -450,9 +454,9 @@ elif st.session_state.current_step == 5:
             num_res = st.session_state.data_input[esp][f'num_residentes_{r_key}']
             notes = st.session_state.data_input[esp][r_key]
 
-            # Aplicar la lógica de pre-relleno si 'Todos' no está marcado y este R no está seleccionado
+            # Aplicar la lógica de pre-relleno si este R no está seleccionado
             if r_key not in st.session_state.selected_rs_for_input:
-                num_res = 0 # Rellenar con 0 si no está seleccionado y no es 'Todos'
+                num_res = 0 # Rellenar con 0 si no está seleccionado
             
             table_data_list.append({
                 "Especialidad": esp,
@@ -579,7 +583,7 @@ elif st.session_state.current_step == 6:
     st.session_state.total_residentes_r = {f'R{i}': 0 for i in range(1, 6)}
     st.session_state.note_entry_summary = []
 
-    for esp in st.session_state.especialidades_para_rellenar: # <--- MODIFICA ESTA LÍNEA (la línea 553 de tu error)
+    for esp in st.session_state.especialidades_para_rellenar:
         total_aptos_esp = 0
         note_summary_row = {"Especialidad": esp, "3 Notas": [], "2 Notas": [], "1 Nota": [], "Vacío": []}
 
@@ -636,7 +640,7 @@ elif st.session_state.current_step == 6:
             # Calcular medias y preparar DataFrame para Excel
             results = []
             n_residentes_data = []
-            for esp in st.session_state.especialidades_para_rellenar: # <--- ASÍ DEBE QUEDAR LA LÍNEA CORREGIDA
+            for esp in st.session_state.especialidades_para_rellenar:
                 row = {"Especialidad": esp}
                 total_aptos_esp = 0
 
@@ -733,6 +737,6 @@ if st.sidebar.button("Salir del Aplicativo 🚪"):
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("##### ℹ️ Información del Aplicativo")
-st.sidebar.write("Versión: 1.2") # Actualizar la versión
+st.sidebar.write("Versión: 1.3") # Actualizar la versión
 st.sidebar.write("Desarrollado para: F.S.E. – S.C.S.")
 st.sidebar.write("Fecha: Julio 2025")
