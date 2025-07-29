@@ -405,12 +405,27 @@ elif st.session_state.current_step == 5:
         }
         st.session_state.data_input_direccion = st.session_state.direccion_selected
 
+    # NUEVO: Inicializar DataFrames persistentes si no existen
+    if 'persistent_dataframes' not in st.session_state:
+        st.session_state.persistent_dataframes = {}
+        for r_num in range(1, 6):
+            r_key = f'R{r_num}'
+            table_data_list = []
+            for esp in especialidades_para_rellenar:
+                table_data_list.append({
+                    "Especialidad": esp,
+                    f"Nº {r_key} Evaluados": None,
+                    f"{r_key} Nota 1": None,
+                    f"{r_key} Nota 2": None,
+                    f"{r_key} Nota 3": None
+                })
+            st.session_state.persistent_dataframes[r_key] = pd.DataFrame(table_data_list)
+
     st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
-    # SOLUCIÓN: Reemplazar checkboxes por multiselect
+    # Usar multiselect en lugar de checkboxes individuales
     r_options = ['R1', 'R2', 'R3', 'R4', 'R5']
     
-    # Usar multiselect en lugar de checkboxes individuales
     selected_rs = st.multiselect(
         "Seleccione los años de residencia (R) para los que va a introducir datos:",
         options=r_options,
@@ -420,135 +435,122 @@ elif st.session_state.current_step == 5:
     )
     
     # Opción adicional para seleccionar todos
-    if st.button("Seleccionar Todos los R", key="select_all_rs"):
-        # Forzar la actualización del multiselect
-        st.session_state.selected_rs_for_input = r_options.copy()
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Seleccionar Todos los R", key="select_all_rs"):
+            st.session_state.selected_rs_for_input = r_options.copy()
+            st.rerun()
     
-    if st.button("Deseleccionar Todos", key="deselect_all_rs"):
-        st.session_state.selected_rs_for_input = []
-        st.rerun()
+    with col2:
+        if st.button("Deseleccionar Todos", key="deselect_all_rs"):
+            st.session_state.selected_rs_for_input = []
+            st.rerun()
 
     # Actualizar el estado con la selección actual
     st.session_state.selected_rs_for_input = selected_rs
 
     st.info("💡 Solo se activan los campos de los R seleccionados. Los demás se rellenan con 0 automáticamente.")
     st.info("💡 **Importante:** Para las notas, si no va a rellenar las 3 notas más altas, deje los campos vacíos. No ponga '0', ya que afectaría a la media. Las notas deben estar entre 0 y 10, con hasta 2 decimales.")
-    st.info("Cuando selecciona un R, la tabla de ese R se activa para la edición. Los R no seleccionados tendrán su 'Nº Evaluados' rellenado con 0.")
 
-    # Generar las 5 tablas dinámicamente
-    edited_dfs = {} # Diccionario para almacenar los DataFrames editados por R
-
+    # Generar las 5 tablas dinámicamente usando DataFrames persistentes
     for r_num in range(1, 6):
         r_key = f'R{r_num}'
         
-        # Preparar datos para la tabla actual de R
-        table_data_list = []
-        for esp in especialidades_para_rellenar:
-            num_res = st.session_state.data_input[esp][f'num_residentes_{r_key}']
-            notes = st.session_state.data_input[esp][r_key]
-
-            # Aplicar la lógica de pre-relleno si este R no está seleccionado
-            if r_key not in st.session_state.selected_rs_for_input:
-                num_res = 0 # Rellenar con 0 si no está seleccionado
-            
-            table_data_list.append({
-                "Especialidad": esp,
-                f"Nº {r_key} Evaluados": num_res,
-                f"{r_key} Nota 1": notes[0],
-                f"{r_key} Nota 2": notes[1],
-                f"{r_key} Nota 3": notes[2]
-            })
+        # Determinar si la columna de Nº Evaluados debe estar deshabilitada
+        is_r_selected = r_key in st.session_state.selected_rs_for_input
         
-        table_df = pd.DataFrame(table_data_list)
-
         st.markdown(f"#### Datos para {r_key}")
         
-        # Determinar si la columna de Nº Evaluados debe estar deshabilitada
-        is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
-
         # Mostrar estado visual del R
-        if r_key in st.session_state.selected_rs_for_input:
+        if is_r_selected:
             st.success(f"✅ {r_key} seleccionado - Campos activos para edición")
         else:
             st.warning(f"⚠️ {r_key} no seleccionado - Campos deshabilitados (se rellenarán con 0)")
+
+        # CLAVE: Aplicar la lógica de pre-relleno ANTES de mostrar el data_editor
+        current_df = st.session_state.persistent_dataframes[r_key].copy()
+        
+        if not is_r_selected:
+            # Si no está seleccionado, rellenar la columna de "Nº Evaluados" con 0
+            current_df[f"Nº {r_key} Evaluados"] = 0
+        else:
+            # Si está seleccionado, aplicar los valores del estado si existen
+            for i, esp in enumerate(especialidades_para_rellenar):
+                if esp in st.session_state.data_input:
+                    # Aplicar valores desde data_input si existen
+                    num_res_val = st.session_state.data_input[esp].get(f'num_residentes_{r_key}')
+                    if num_res_val is not None:
+                        current_df.iloc[i, current_df.columns.get_loc(f"Nº {r_key} Evaluados")] = num_res_val
+                    
+                    notes = st.session_state.data_input[esp].get(r_key, [None, None, None])
+                    for j, note in enumerate(notes):
+                        if note is not None:
+                            current_df.iloc[i, current_df.columns.get_loc(f"{r_key} Nota {j+1}")] = note
 
         # Configuración de columnas para el st.data_editor
         column_config = {
             "Especialidad": st.column_config.Column("Especialidad", disabled=True),
             f"Nº {r_key} Evaluados": st.column_config.NumberColumn(
                 f"Nº {r_key} Evaluados",
-                min_value=0, format="%d", help=f"Número de residentes {r_key} evaluados en esta especialidad.",
-                disabled=is_num_res_disabled # Deshabilitar si no está seleccionado
+                min_value=0, format="%d", 
+                help=f"Número de residentes {r_key} evaluados en esta especialidad.",
+                disabled=not is_r_selected
             ),
             f"{r_key} Nota 1": st.column_config.NumberColumn(
                 f"{r_key} Nota 1", 
                 min_value=0.0, max_value=10.0, format="%.2f",
-                disabled=is_num_res_disabled  # También deshabilitar notas si R no seleccionado
+                disabled=not is_r_selected
             ),
             f"{r_key} Nota 2": st.column_config.NumberColumn(
                 f"{r_key} Nota 2", 
                 min_value=0.0, max_value=10.0, format="%.2f",
-                disabled=is_num_res_disabled
+                disabled=not is_r_selected
             ),
             f"{r_key} Nota 3": st.column_config.NumberColumn(
                 f"{r_key} Nota 3", 
                 min_value=0.0, max_value=10.0, format="%.2f",
-                disabled=is_num_res_disabled
+                disabled=not is_r_selected
             )
         }
 
+        # CLAVE: Usar el DataFrame actualizado y guardar los cambios inmediatamente
         edited_df = st.data_editor(
-            table_df,
+            current_df,
             column_config=column_config,
             num_rows="fixed",
             use_container_width=True,
-            key=f"data_input_editor_{r_key}",
-            disabled=is_num_res_disabled  # Deshabilitar toda la tabla si R no seleccionado
+            key=f"data_input_editor_{r_key}"
         )
-        edited_dfs[r_key] = edited_df
-
-        st.markdown("---") # Separador entre tablas
-
-    # Actualizar st.session_state.data_input con los valores editados de todas las tablas
-    for i, esp in enumerate(especialidades_para_rellenar):
-        for r_num in range(1, 6):
-            r_key = f'R{r_num}'
-            edited_df_r = edited_dfs[r_key]
-            
-            # Determine if the 'Nº Evaluados' column for this R is disabled
-            is_num_res_disabled = r_key not in st.session_state.selected_rs_for_input
-
-            # Handle num_residentes_R
-            if is_num_res_disabled:
-                # If disabled, it should be 0, regardless of what data_editor might return
+        
+        # CLAVE: Actualizar inmediatamente el DataFrame persistente
+        st.session_state.persistent_dataframes[r_key] = edited_df.copy()
+        
+        # CLAVE: Actualizar también st.session_state.data_input inmediatamente
+        for i, esp in enumerate(especialidades_para_rellenar):
+            if not is_r_selected:
+                # Si R no está seleccionado, forzar valores
                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
-            else:
-                # If enabled, get the value from the edited DataFrame
-                num_res_val = edited_df_r.iloc[i][f"Nº {r_key} Evaluados"]
-                # Try converting to int, handle potential None/NaN/empty string from user input
-                try:
-                    # Convert to int only if not None/NaN, otherwise keep as None for validation to catch
-                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(num_res_val) if pd.notna(num_res_val) and num_res_val != "" else None
-                except ValueError:
-                    # If conversion fails, set to None to be caught by validation
-                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = None
-
-            # Recuperar las notas de la tabla editada
-            if is_num_res_disabled:
-                # Si el R está deshabilitado, las notas deben ser None
                 st.session_state.data_input[esp][r_key] = [None, None, None]
             else:
+                # Si R está seleccionado, obtener valores del DataFrame editado
+                # Número de residentes
+                num_res_val = edited_df.iloc[i][f"Nº {r_key} Evaluados"]
+                try:
+                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(num_res_val) if pd.notna(num_res_val) and num_res_val != "" else None
+                except (ValueError, TypeError):
+                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = None
+
+                # Notas
                 updated_notes = []
-                for j in range(1, 4): # For Nota 1, Nota 2, Nota 3
-                    note_val = edited_df_r.iloc[i][f"{r_key} Nota {j}"]
+                for j in range(1, 4):
+                    note_val = edited_df.iloc[i][f"{r_key} Nota {j}"]
                     try:
-                        # Convert to float only if not None/NaN, otherwise keep as None for validation to catch
                         updated_notes.append(float(note_val) if pd.notna(note_val) and note_val != "" else None)
-                    except ValueError:
-                        updated_notes.append(None) # If conversion fails, set to None
+                    except (ValueError, TypeError):
+                        updated_notes.append(None)
                 st.session_state.data_input[esp][r_key] = updated_notes
-            
+
+        st.markdown("---") # Separador entre tablas
 
     col_next_step5, col_back_step5 = st.columns(2)
 
@@ -563,18 +565,17 @@ elif st.session_state.current_step == 5:
                     num_res_value = data[num_res_key]
                     
                     # Validation for 'num_residentes'
-                    if num_res_value is None: # Now None explicitly means empty or invalid
+                    if num_res_value is None:
                         # Only raise error if the field was enabled and meant for user input
-                        is_num_res_disabled = f'R{r_num}' not in st.session_state.selected_rs_for_input
-                        if not is_num_res_disabled: # If it was expected to have a value
+                        is_r_enabled = f'R{r_num}' in st.session_state.selected_rs_for_input
+                        if is_r_enabled:
                             validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío o no es un número válido.")
-                    elif not isinstance(num_res_value, int) or num_res_value < 0: # Ensure it's an int and non-negative
+                    elif not isinstance(num_res_value, int) or num_res_value < 0:
                         validation_errors.append(f"En '{esp}', '{num_res_key}': El valor '{num_res_value}' no es un número válido o es negativo.")
-
 
                     # Validar notas (entre 0 y 10, hasta 2 decimales)
                     for k, note in enumerate(data[f'R{r_num}']):
-                        if note is not None: # Now None explicitly means empty or invalid from the previous update
+                        if note is not None:
                             if not isinstance(note, float) or not (0 <= note <= 10):
                                 validation_errors.append(f"En '{esp}', Nota {k+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
             
