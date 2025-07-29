@@ -642,10 +642,9 @@ elif st.session_state.current_step == 6:
         note_summary_row["Vacío"] = ", ".join(note_summary_row["Vacío"])
         st.session_state.note_entry_summary.append(note_summary_row)
 
-
-    # Cuadro de Número de Residentes Evaluados
+    # CORREGIDO: Cuadro de Número de Residentes Finalizados (era "Evaluados")
     st.markdown("##### Número de residentes finalizados por año")
-    residentes_finalizuados_df = pd.DataFrame({
+    residentes_finalizados_df = pd.DataFrame({
         " ": ["Numero de residentes finalizados"],
         "R1": [st.session_state.total_residentes_r['R1']],
         "R2": [st.session_state.total_residentes_r['R2']],
@@ -683,7 +682,7 @@ elif st.session_state.current_step == 6:
                 row["Nº Residentes Aptos"] = total_aptos_esp
                 results.append(row)
 
-                # Datos para la hoja "N_Residentes" con la nueva estructura
+                # CORREGIDO: Datos para la hoja "N_Residentes" con "Finalizados" en lugar de "Evaluados"
                 n_residentes_data.append({
                     "Especialidad": esp,
                     "Nº R1 Finalizados": st.session_state.data_input[esp]['num_residentes_R1'],
