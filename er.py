@@ -279,7 +279,7 @@ elif st.session_state.current_step == 2:
     **Bienvenidos al programa para calcular las medias de los residentes**
 
     * Debe seleccionar su **ÁREA** de operación y su **DIRECCIÓN/GERENCIA/UNIDAD DOCENTE** para obtener acceso a las especialidades evaluadas.
-    * Debe rellenar el **número de residentes evaluados** en el ejercicio en curso, para todas las especialidades y año de residencia.
+    * Debe rellenar el **número de residentes finalizados** en el ejercicio en curso, para todas las especialidades y año de residencia.
     * Debe rellenar las notas de los residentes. Los valores aceptados no pueden ser superiores a **10** y pueden contener **2 decimales**.
     * Si no rellena las 3 notas más altas de alguna especialidad, **NO debe poner un 0** en la casilla vacía, simplemente no introduzca ningún valor numérico.
     * ~~<span style='color: red;'>**Importante:** Para la introducción de las notas es posible que tenga que hacerlo dos veces por cada celda, **NO es un error**, es un proceso de validación del programa. Disculpe las molestias.</span>~~ **CORREGIDO EN VERSIÓN 1.3**
@@ -405,22 +405,6 @@ elif st.session_state.current_step == 5:
         }
         st.session_state.data_input_direccion = st.session_state.direccion_selected
 
-    # NUEVO: Inicializar DataFrames persistentes si no existen
-    if 'persistent_dataframes' not in st.session_state:
-        st.session_state.persistent_dataframes = {}
-        for r_num in range(1, 6):
-            r_key = f'R{r_num}'
-            table_data_list = []
-            for esp in especialidades_para_rellenar:
-                table_data_list.append({
-                    "Especialidad": esp,
-                    f"Nº {r_key} Evaluados": None,
-                    f"{r_key} Nota 1": None,
-                    f"{r_key} Nota 2": None,
-                    f"{r_key} Nota 3": None
-                })
-            st.session_state.persistent_dataframes[r_key] = pd.DataFrame(table_data_list)
-
     st.markdown("### Seleccione de qué R va a introducir las 3 notas más altas:")
 
     # Usar multiselect en lugar de checkboxes individuales
@@ -452,11 +436,11 @@ elif st.session_state.current_step == 5:
     st.info("💡 Solo se activan los campos de los R seleccionados. Los demás se rellenan con 0 automáticamente.")
     st.info("💡 **Importante:** Para las notas, si no va a rellenar las 3 notas más altas, deje los campos vacíos. No ponga '0', ya que afectaría a la media. Las notas deben estar entre 0 y 10, con hasta 2 decimales.")
 
-    # Generar las 5 tablas dinámicamente usando DataFrames persistentes
+    # NUEVA SOLUCIÓN: Usar number_inputs individuales en lugar de data_editor
     for r_num in range(1, 6):
         r_key = f'R{r_num}'
         
-        # Determinar si la columna de Nº Evaluados debe estar deshabilitada
+        # Determinar si este R está seleccionado
         is_r_selected = r_key in st.session_state.selected_rs_for_input
         
         st.markdown(f"#### Datos para {r_key}")
@@ -465,92 +449,115 @@ elif st.session_state.current_step == 5:
         if is_r_selected:
             st.success(f"✅ {r_key} seleccionado - Campos activos para edición")
         else:
-            st.warning(f"⚠️ {r_key} no seleccionado - Campos deshabilitados (se rellenarán con 0)")
+            st.warning(f"⚠️ {r_key} no seleccionado - Se rellenará automáticamente con 0")
 
-        # CLAVE: Aplicar la lógica de pre-relleno ANTES de mostrar el data_editor
-        current_df = st.session_state.persistent_dataframes[r_key].copy()
-        
-        if not is_r_selected:
-            # Si no está seleccionado, rellenar la columna de "Nº Evaluados" con 0
-            current_df[f"Nº {r_key} Evaluados"] = 0
-        else:
-            # Si está seleccionado, aplicar los valores del estado si existen
-            for i, esp in enumerate(especialidades_para_rellenar):
-                if esp in st.session_state.data_input:
-                    # Aplicar valores desde data_input si existen
-                    num_res_val = st.session_state.data_input[esp].get(f'num_residentes_{r_key}')
-                    if num_res_val is not None:
-                        current_df.iloc[i, current_df.columns.get_loc(f"Nº {r_key} Evaluados")] = num_res_val
-                    
-                    notes = st.session_state.data_input[esp].get(r_key, [None, None, None])
-                    for j, note in enumerate(notes):
-                        if note is not None:
-                            current_df.iloc[i, current_df.columns.get_loc(f"{r_key} Nota {j+1}")] = note
-
-        # Configuración de columnas para el st.data_editor
-        column_config = {
-            "Especialidad": st.column_config.Column("Especialidad", disabled=True),
-            f"Nº {r_key} Evaluados": st.column_config.NumberColumn(
-                f"Nº {r_key} Evaluados",
-                min_value=0, format="%d", 
-                help=f"Número de residentes {r_key} evaluados en esta especialidad.",
-                disabled=not is_r_selected
-            ),
-            f"{r_key} Nota 1": st.column_config.NumberColumn(
-                f"{r_key} Nota 1", 
-                min_value=0.0, max_value=10.0, format="%.2f",
-                disabled=not is_r_selected
-            ),
-            f"{r_key} Nota 2": st.column_config.NumberColumn(
-                f"{r_key} Nota 2", 
-                min_value=0.0, max_value=10.0, format="%.2f",
-                disabled=not is_r_selected
-            ),
-            f"{r_key} Nota 3": st.column_config.NumberColumn(
-                f"{r_key} Nota 3", 
-                min_value=0.0, max_value=10.0, format="%.2f",
-                disabled=not is_r_selected
-            )
-        }
-
-        # CLAVE: Usar el DataFrame actualizado y guardar los cambios inmediatamente
-        edited_df = st.data_editor(
-            current_df,
-            column_config=column_config,
-            num_rows="fixed",
-            use_container_width=True,
-            key=f"data_input_editor_{r_key}"
-        )
-        
-        # CLAVE: Actualizar inmediatamente el DataFrame persistente
-        st.session_state.persistent_dataframes[r_key] = edited_df.copy()
-        
-        # CLAVE: Actualizar también st.session_state.data_input inmediatamente
+        # Crear tabla visual usando columnas de Streamlit
         for i, esp in enumerate(especialidades_para_rellenar):
+            
+            # Aplicar lógica de pre-relleno para R no seleccionados
             if not is_r_selected:
-                # Si R no está seleccionado, forzar valores
                 st.session_state.data_input[esp][f'num_residentes_{r_key}'] = 0
                 st.session_state.data_input[esp][r_key] = [None, None, None]
-            else:
-                # Si R está seleccionado, obtener valores del DataFrame editado
-                # Número de residentes
-                num_res_val = edited_df.iloc[i][f"Nº {r_key} Evaluados"]
-                try:
-                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = int(num_res_val) if pd.notna(num_res_val) and num_res_val != "" else None
-                except (ValueError, TypeError):
-                    st.session_state.data_input[esp][f'num_residentes_{r_key}'] = None
+            
+            with st.container():
+                st.markdown(f"**{esp}**")
+                
+                # Crear 5 columnas: Especialidad ya está arriba, luego 4 campos
+                col_num, col_nota1, col_nota2, col_nota3 = st.columns([1.5, 1, 1, 1])
+                
+                with col_num:
+                    # Campo para número de residentes finalizados
+                    if is_r_selected:
+                        current_num = st.session_state.data_input[esp][f'num_residentes_{r_key}']
+                        num_value = st.number_input(
+                            f"Nº {r_key} Finalizados",
+                            min_value=0,
+                            value=current_num if current_num is not None else 0,
+                            step=1,
+                            key=f"num_{esp}_{r_key}_{i}",
+                            help=f"Número de residentes {r_key} finalizados en {esp}"
+                        )
+                        st.session_state.data_input[esp][f'num_residentes_{r_key}'] = num_value
+                    else:
+                        st.number_input(
+                            f"Nº {r_key} Finalizados",
+                            value=0,
+                            disabled=True,
+                            key=f"num_disabled_{esp}_{r_key}_{i}"
+                        )
+                
+                with col_nota1:
+                    # Nota 1
+                    if is_r_selected:
+                        current_nota1 = st.session_state.data_input[esp][r_key][0]
+                        nota1_value = st.number_input(
+                            f"{r_key} Nota 1",
+                            min_value=0.0,
+                            max_value=10.0,
+                            value=current_nota1 if current_nota1 is not None else None,
+                            step=0.01,
+                            format="%.2f",
+                            key=f"nota1_{esp}_{r_key}_{i}",
+                            help=f"Primera nota más alta de {r_key} en {esp}"
+                        )
+                        st.session_state.data_input[esp][r_key][0] = nota1_value
+                    else:
+                        st.number_input(
+                            f"{r_key} Nota 1",
+                            value=None,
+                            disabled=True,
+                            key=f"nota1_disabled_{esp}_{r_key}_{i}"
+                        )
+                
+                with col_nota2:
+                    # Nota 2
+                    if is_r_selected:
+                        current_nota2 = st.session_state.data_input[esp][r_key][1]
+                        nota2_value = st.number_input(
+                            f"{r_key} Nota 2",
+                            min_value=0.0,
+                            max_value=10.0,
+                            value=current_nota2 if current_nota2 is not None else None,
+                            step=0.01,
+                            format="%.2f",
+                            key=f"nota2_{esp}_{r_key}_{i}",
+                            help=f"Segunda nota más alta de {r_key} en {esp}"
+                        )
+                        st.session_state.data_input[esp][r_key][1] = nota2_value
+                    else:
+                        st.number_input(
+                            f"{r_key} Nota 2",
+                            value=None,
+                            disabled=True,
+                            key=f"nota2_disabled_{esp}_{r_key}_{i}"
+                        )
+                
+                with col_nota3:
+                    # Nota 3
+                    if is_r_selected:
+                        current_nota3 = st.session_state.data_input[esp][r_key][2]
+                        nota3_value = st.number_input(
+                            f"{r_key} Nota 3",
+                            min_value=0.0,
+                            max_value=10.0,
+                            value=current_nota3 if current_nota3 is not None else None,
+                            step=0.01,
+                            format="%.2f",
+                            key=f"nota3_{esp}_{r_key}_{i}",
+                            help=f"Tercera nota más alta de {r_key} en {esp}"
+                        )
+                        st.session_state.data_input[esp][r_key][2] = nota3_value
+                    else:
+                        st.number_input(
+                            f"{r_key} Nota 3",
+                            value=None,
+                            disabled=True,
+                            key=f"nota3_disabled_{esp}_{r_key}_{i}"
+                        )
+                
+                st.markdown("---")  # Separador entre especialidades
 
-                # Notas
-                updated_notes = []
-                for j in range(1, 4):
-                    note_val = edited_df.iloc[i][f"{r_key} Nota {j}"]
-                    try:
-                        updated_notes.append(float(note_val) if pd.notna(note_val) and note_val != "" else None)
-                    except (ValueError, TypeError):
-                        updated_notes.append(None)
-                st.session_state.data_input[esp][r_key] = updated_notes
-
-        st.markdown("---") # Separador entre tablas
+        st.markdown("---")  # Separador entre Rs
 
     col_next_step5, col_back_step5 = st.columns(2)
 
@@ -560,24 +567,25 @@ elif st.session_state.current_step == 5:
             validation_errors = []
             for esp, data in st.session_state.data_input.items():
                 for r_num in range(1, 6):
-                    num_res_key = f"num_residentes_R{r_num}"
+                    r_key = f'R{r_num}'
+                    num_res_key = f"num_residentes_{r_key}"
                     
                     num_res_value = data[num_res_key]
                     
                     # Validation for 'num_residentes'
                     if num_res_value is None:
                         # Only raise error if the field was enabled and meant for user input
-                        is_r_enabled = f'R{r_num}' in st.session_state.selected_rs_for_input
+                        is_r_enabled = r_key in st.session_state.selected_rs_for_input
                         if is_r_enabled:
-                            validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío o no es un número válido.")
+                            validation_errors.append(f"En '{esp}', '{num_res_key}': El número de residentes no puede estar vacío.")
                     elif not isinstance(num_res_value, int) or num_res_value < 0:
                         validation_errors.append(f"En '{esp}', '{num_res_key}': El valor '{num_res_value}' no es un número válido o es negativo.")
 
                     # Validar notas (entre 0 y 10, hasta 2 decimales)
-                    for k, note in enumerate(data[f'R{r_num}']):
+                    for k, note in enumerate(data[r_key]):
                         if note is not None:
-                            if not isinstance(note, float) or not (0 <= note <= 10):
-                                validation_errors.append(f"En '{esp}', Nota {k+1} de R{r_num}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
+                            if not isinstance(note, (int, float)) or not (0 <= note <= 10):
+                                validation_errors.append(f"En '{esp}', Nota {k+1} de {r_key}: El valor '{note}' no es válido. Las notas deben ser números entre 0 y 10.")
             
             if validation_errors:
                 for error in validation_errors:
@@ -608,7 +616,7 @@ elif st.session_state.current_step == 6:
         for r_num in range(1, 6):
             r_key = f"R{r_num}"
             
-            # Sumar el número de residentes evaluados para el total aptos
+            # Sumar el número de residentes finalizados para el total aptos
             num_res_r_key = f"num_residentes_{r_key}"
             if st.session_state.data_input[esp][num_res_r_key] is not None and pd.notna(st.session_state.data_input[esp][num_res_r_key]):
                 total_res_for_r = int(st.session_state.data_input[esp][num_res_r_key])
@@ -636,16 +644,16 @@ elif st.session_state.current_step == 6:
 
 
     # Cuadro de Número de Residentes Evaluados
-    st.markdown("##### Número de residentes evaluados por año")
-    residentes_evaluados_df = pd.DataFrame({
-        " ": ["Numero de residentes evaluados"],
+    st.markdown("##### Número de residentes finalizados por año")
+    residentes_finalizuados_df = pd.DataFrame({
+        " ": ["Numero de residentes finalizados"],
         "R1": [st.session_state.total_residentes_r['R1']],
         "R2": [st.session_state.total_residentes_r['R2']],
         "R3": [st.session_state.total_residentes_r['R3']],
         "R4": [st.session_state.total_residentes_r['R4']],
         "R5": [st.session_state.total_residentes_r['R5']]
     })
-    st.table(residentes_evaluados_df)
+    st.table(residentes_finalizados_df)
 
     # Cuadro de Rangos de Notas Introducidos
     st.markdown("##### Rangos de notas introducidos por especialidad y R")
@@ -678,11 +686,11 @@ elif st.session_state.current_step == 6:
                 # Datos para la hoja "N_Residentes" con la nueva estructura
                 n_residentes_data.append({
                     "Especialidad": esp,
-                    "Nº R1 Evaluados": st.session_state.data_input[esp]['num_residentes_R1'],
-                    "Nº R2 Evaluados": st.session_state.data_input[esp]['num_residentes_R2'],
-                    "Nº R3 Evaluados": st.session_state.data_input[esp]['num_residentes_R3'],
-                    "Nº R4 Evaluados": st.session_state.data_input[esp]['num_residentes_R4'],
-                    "Nº R5 Evaluados": st.session_state.data_input[esp]['num_residentes_R5'],
+                    "Nº R1 Finalizados": st.session_state.data_input[esp]['num_residentes_R1'],
+                    "Nº R2 Finalizados": st.session_state.data_input[esp]['num_residentes_R2'],
+                    "Nº R3 Finalizados": st.session_state.data_input[esp]['num_residentes_R3'],
+                    "Nº R4 Finalizados": st.session_state.data_input[esp]['num_residentes_R4'],
+                    "Nº R5 Finalizados": st.session_state.data_input[esp]['num_residentes_R5'],
                     "Nº Residentes Aptos en la Evaluación final de residencia": total_aptos_esp
                 })
 
