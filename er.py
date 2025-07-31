@@ -66,8 +66,7 @@ ESPECIALIDADES_POR_DIRECCION = {
         "ANATOMÍA PATOLÓGICA", "ANESTESIOLOGÍA Y REANIMACIÓN", "ANGIOLOGÍA Y CIRUGÍA VASCULAR",
         "APARATO DIGESTIVO", "BIOQUÍMICA CLÍNICA", "CARDIOLOGÍA", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO",
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "CIRUGÍA PEDIÁTRICA",
-        "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA", "ENDOCRINOLOGÍA Y NUTRICIÓN", 
-        "ENFERMERÍA PEDIATRICA",
+        "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA", "ENDOCRINOLOGÍA Y NUTRICIÓN",
         "FARMACIA HOSPITALARIA", "HEMATOLOGÍA Y HEMOTERAPIA", "MEDICINA FÍSICA Y REHABILITACIÓN",
         "MEDICINA INTENSIVA", "MEDICINA INTERNA", "MEDICINA NUCLEAR",
         "MICROBIOLOGÍA Y PARASITOLOGÍA", "NEFROLOGÍA", "NEUMOLOGÍA", "NEUROCIRUGÍA",
@@ -79,8 +78,7 @@ ESPECIALIDADES_POR_DIRECCION = {
         "APARATO DIGESTIVO", "BIOQUÍMICA CLÍNICA", "CARDIOLOGÍA", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO",
         "CIRUGÍA ORAL Y MAXILOFACIAL", "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA",
         "CIRUGÍA PLÁSTICA ESTÉTICA Y REPARADORA", "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA",
-        "ENDOCRINOLOGÍA Y NUTRICIÓN", "ENFERMERÍA DE SALUD MENTAL",
-        "ENFERMERÍA PEDIATRICA", "FARMACIA HOSPITALARIA",
+        "ENDOCRINOLOGÍA Y NUTRICIÓN", "FARMACIA HOSPITALARIA",
         "FARMACOLOGÍA CLÍNICA", "HEMATOLOGÍA Y HEMOTERAPIA", "MEDICINA FÍSICA Y REHABILITACIÓN",
         "MEDICINA INTENSIVA", "MEDICINA INTERNA", "MEDICINA NUCLEAR",
         "MICROBIOLOGÍA Y PARASITOLOGÍA", "NEFROLOGÍA", "NEUMOLOGÍA", "NEUROCIRUGÍA", "NEUROLOGÍA",
@@ -93,7 +91,7 @@ ESPECIALIDADES_POR_DIRECCION = {
         "CARDIOLOGÍA", "CIRUGÍA GENERAL Y DEL APARATO DIGESTIVO", "CIRUGÍA ORAL Y MAXILOFACIAL",
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "DERMATOLOGÍA MÉDICO-QUIRÚRGICA Y VENEREOLOGÍA",
         "ENDOCRINOLOGÍA Y NUTRICIÓN",
-        "ENFERMERÍA PEDIATRICA", "FARMACIA HOSPITALARIA", "HEMATOLOGÍA Y HEMOTERAPIA",
+        "FARMACIA HOSPITALARIA", "HEMATOLOGÍA Y HEMOTERAPIA",
         "MEDICINA FÍSICA Y REHABILITACIÓN", "MEDICINA INTENSIVA", "MEDICINA INTERNA",
         "MEDICINA NUCLEAR", "MICROBIOLOGÍA Y PARASITOLOGÍA", "NEFROLOGÍA", "NEUMOLOGÍA",
         "NEUROCIRUGÍA", "NEUROFISIOLOGÍA CLÍNICA", "NEUROLOGÍA", "OBSTETRICIA Y GINECOLOGÍA",
@@ -110,14 +108,13 @@ ESPECIALIDADES_POR_DIRECCION = {
         "MEDICINA FAMILIAR Y COMUNITARIA", "ENFERMERÍA FAMILIAR Y COMUNITARIA"
     ],
     "GERENCIA DE SERVICIOS SANITARIOS DE FUERTEVENTURA": [
-        "MEDICINA FAMILIAR Y COMUNITARIA", "ENFERMERÍA FAMILIAR Y COMUNITARIA",
-        "ENFERMERÍA OBSTÉTRICO GINECOLOGICA"
+        "MEDICINA FAMILIAR Y COMUNITARIA", "ENFERMERÍA FAMILIAR Y COMUNITARIA"
     ],
     "GERENCIA DE SERVICIOS SANITARIOS DE LANZAROTE": [
         "CIRUGÍA ORTOPÉDICA Y TRAUMATOLOGÍA", "ENFERMERÍA FAMILIAR Y COMUNITARIA",
         "ENFERMERIA GERIATRICA",
-        "ENFERMERÍA PEDIATRICA", "GERIATRIA", "MEDICINA FAMILIAR Y COMUNITARIA",
-        "MEDICINA INTERNA", "PEDIATRIA Y SUS AREAS ESPECIFICAS"
+        "GERIATRIA", "MEDICINA FAMILIAR Y COMUNITARIA",
+        "MEDICINA INTERNA"
     ],
     "GERENCIA DE SERVICIOS SANITARIOS DE LA PALMA": [
         "MEDICINA FAMILIAR Y COMUNITARIA", "ENFERMERÍA FAMILIAR Y COMUNITARIA"
@@ -278,7 +275,7 @@ elif st.session_state.current_step == 2:
     st.markdown("""
     **Bienvenidos al programa para calcular las medias de los residentes**
 
-    * Debe seleccionar su **ÁREA** de operación y su **DIRECCIÓN/GERENCIA/UNIDAD DOCENTE** para obtener acceso a las especialidades evaluadas.
+    * Debe seleccionar su **ÁREA** de operación y su **UNIDAD DOCENTE DE CENTRO HOSPITALARIO/UNIDAD DOCENTE MULTIPROFESIONAL DE ATENCION FAMILIAR Y COMUNITARIA/OTRAS UNIDADES DOCENTES** para obtener acceso a las especialidades evaluadas.
     * Debe rellenar el **número de residentes finalizados** en el ejercicio en curso, para todas las especialidades y año de residencia.
     * Debe rellenar las notas de los residentes. Los valores aceptados no pueden ser superiores a **10** y pueden contener **2 decimales**.
     * Si no rellena las 3 notas más altas de alguna especialidad, **NO debe poner un 0** en la casilla vacía, simplemente no introduzca ningún valor numérico.
@@ -296,9 +293,9 @@ elif st.session_state.current_step == 2:
 
 # 3º: Selección de Área y Dirección/Gerencia/Unidad Docente (Ahora Paso 3)
 elif st.session_state.current_step == 3:
-    st.header("Paso 2: Selección de Área y Dirección/Gerencia/Unidad Docente")
+    st.header("Paso 2: Selección de Área y Unidad Docente de Centro Hospitalario/Unidad Docente Multiprofesional de Atencion Familiar y Comunitaria/Otras Unidades Docentes")
 
-    area_options = ["HOSPITALARIA", "PRIMARIA", "UNIDAD DOCENTE"]
+    area_options = ["UNIDAD DOCENTE DE CENTRO HOSPITALARIO", "UNIDAD DOCENTE MULTIPROFESIONAL DE ATENCION FAMILIAR Y COMUNITARIA", "OTRAS UNIDADES DOCENTES"]
     st.session_state.area_selected = st.selectbox(
         "**SELECCIONE ÁREA**",
         options=[""] + area_options,
@@ -307,14 +304,14 @@ elif st.session_state.current_step == 3:
     )
 
     direccion_options = []
-    if st.session_state.area_selected == "HOSPITALARIA":
+    if st.session_state.area_selected == "UNIDAD DOCENTE DE CENTRO HOSPITALARIO":
         direccion_options = [
             "DIRECCIÓN GERENCIA HOSPITAL DOCTOR NEGRIN",
             "DIRECCIÓN GERENCIA COMPLEJO HOSPITALARIO UNIVERSITARIO Y MATERNO INFANTIL",
             "DIRECCIÓN GERENCIA COMPLEJO HOSPITALARIO UNIVERSITARIO DE CANARIAS",
             "DIRECCIÓN GERENCIA HOSPITAL NUESTRA SEÑORA DE CANDELARIA"
         ]
-    elif st.session_state.area_selected == "PRIMARIA":
+    elif st.session_state.area_selected == "UNIDAD DOCENTE MULTIPROFESIONAL DE ATENCION FAMILIAR Y COMUNITARIA":
         direccion_options = [
             "GERENCIA DE ATENCIÓN PRIMARIA DE GRAN CANARIA",
             "GERENCIA DE ATENCIÓN PRIMARIA DE TENERIFE NORTE",
@@ -323,7 +320,7 @@ elif st.session_state.current_step == 3:
             "GERENCIA DE SERVICIOS SANITARIOS DE LANZAROTE",
             "GERENCIA DE SERVICIOS SANITARIOS DE LA PALMA"
         ]
-    elif st.session_state.area_selected == "UNIDAD DOCENTE":
+    elif st.session_state.area_selected == "OTRAS UNIDADES DOCENTES":
         direccion_options = [
             "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUD MENTAL DE GRAN CANARIA",
             "UNIDAD DOCENTE MULTIPROFESIONAL DE SALUF MENTAL DE TENERIFE",
@@ -337,7 +334,7 @@ elif st.session_state.current_step == 3:
         ]
 
     st.session_state.direccion_selected = st.selectbox(
-        "**SELECCIONE DIRECCIÓN / GERENCIA / UNIDAD DOCENTE**",
+        "**UNIDAD DOCENTE DE CENTRO HOSPITALARIO/UNIDAD DOCENTE MULTIPROFESIONAL DE ATENCION FAMILIAR Y COMUNITARIA/OTRAS UNIDADES DOCENTES**",
         options=[""] + direccion_options,
         index=direccion_options.index(st.session_state.direccion_selected) + 1 if st.session_state.direccion_selected and st.session_state.direccion_selected in direccion_options else 0,
         key="direccion_selector"
@@ -351,7 +348,7 @@ elif st.session_state.current_step == 3:
                 st.session_state.confirm_selection = False
                 st.rerun()
             else:
-                st.warning("Por favor, selecciona un Área y una Dirección/Gerencia para continuar.")
+                st.warning("Por favor, selecciona un Área y una Unidad Docente de Centro Hospitalario/Unidad Docente Multiprofesional de Atencion Familiar y Comunitaria/Otras Unidades Docentes para continuar.")
     with col_back_step3:
         if st.button("ATRÁS", key="back_from_step3"):
             st.session_state.current_step = 2
@@ -361,7 +358,7 @@ elif st.session_state.current_step == 3:
 elif st.session_state.current_step == 4:
     st.header("Paso 3: Confirmación de Datos")
     st.markdown(f"**AREA :** <span style='color: #28a745;'>{st.session_state.area_selected}</span>", unsafe_allow_html=True)
-    st.markdown(f"**DIRECCION/GERENCIA/UNIDAD DOCENTE :** <span style='color: #007bff;'>{st.session_state.direccion_selected}</span>", unsafe_allow_html=True)
+    st.markdown(f"**UNIDAD DOCENTE DE CENTRO HOSPITALARIO/UNIDAD DOCENTE MULTIPROFESIONAL DE ATENCION FAMILIAR Y COMUNITARIA/OTRAS UNIDADES DOCENTES :** <span style='color: #007bff;'>{st.session_state.direccion_selected}</span>", unsafe_allow_html=True)
     st.markdown("**¿Desea confirmar estos datos?**")
 
     col_si, col_atras = st.columns(2)
@@ -380,12 +377,12 @@ elif st.session_state.current_step == 4:
 # 5º: Zona de trabajo - Introducción de datos (Ahora Paso 5)
 elif st.session_state.current_step == 5:
     st.header("Paso 4: Introducción de Datos de Residentes")
-    st.write(f"Dirección/Gerencia/Unidad Docente seleccionada: **{st.session_state.direccion_selected}**")
+    st.write(f"Unidad Docente de Centro Hospitalario/Unidad Docente Multiprofesional de Atencion Familiar y Comunitaria/Otras Unidades Docentes: **{st.session_state.direccion_selected}**")
 
     especialidades_para_rellenar = st.session_state.especialidades_para_rellenar
 
     if not especialidades_para_rellenar:
-        st.warning("No se encontraron especialidades para la Dirección/Gerencia/Unidad Docente seleccionada. Por favor, vuelve al paso anterior.")
+        st.warning("No se encontraron especialidades para la Unidad Docente de Centro Hospitalario/Unidad Docente Multiprofesional de Atencion Familiar y Comunitaria/Otras Unidades Docentes seleccionada. Por favor, vuelve al paso anterior.")
         if st.button("Volver al Paso 2"):
             st.session_state.current_step = 3
             st.rerun()
